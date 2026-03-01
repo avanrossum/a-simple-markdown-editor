@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- EMFILE crash when opening folders with many files (reduced watch depth, added ignore patterns)
+- Title bar drag region: empty space between tabs is now draggable to move the window
+
 ## [0.1.0] - 2026-03-01
 
 ### Added
