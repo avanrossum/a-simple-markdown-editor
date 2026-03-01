@@ -93,6 +93,11 @@ const electronAPI = {
     ipcRenderer.on('show-about', handler);
     return () => ipcRenderer.removeListener('show-about', handler);
   },
+  onCloseTab: (callback) => {
+    const handler = () => callback();
+    ipcRenderer.on('close-tab', handler);
+    return () => ipcRenderer.removeListener('close-tab', handler);
+  },
 
   // ── Dialogs ──
   showMessageBox: (options) => ipcRenderer.invoke('dialog:message-box', options),

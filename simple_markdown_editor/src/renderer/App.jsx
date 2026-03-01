@@ -335,9 +335,10 @@ export default function App() {
       electronAPI.onDuplicateFile(() => duplicateFile()),
       electronAPI.onShowSettings(() => setShowSettings(true)),
       electronAPI.onShowAbout(() => setShowAbout(true)),
+      electronAPI.onCloseTab(() => closeTab(activeTabId)),
     ];
     return () => unsubs.forEach((fn) => fn());
-  }, [saveTab, saveTabAs, newFile, openFile, duplicateFile]);
+  }, [saveTab, saveTabAs, newFile, openFile, duplicateFile, closeTab, activeTabId]);
 
   // ── Toolbar Actions ──
 

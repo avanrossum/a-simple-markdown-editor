@@ -116,7 +116,14 @@ function buildMenu({ getMainWindow, store, onOpen, onSave, onSaveAs, onNewFile, 
           },
         },
         { type: 'separator' },
-        isMac ? { role: 'close' } : { role: 'quit' },
+        {
+          label: 'Close Tab',
+          accelerator: 'CmdOrCtrl+W',
+          click: () => {
+            const win = getMainWindow();
+            if (win) win.webContents.send('close-tab');
+          },
+        },
       ],
     },
     {
