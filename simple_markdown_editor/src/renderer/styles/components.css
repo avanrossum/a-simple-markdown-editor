@@ -6,7 +6,6 @@
   flex: 1;
   height: 100%;
   overflow: hidden;
-  -webkit-app-region: no-drag;
 }
 
 .tab-list {
@@ -35,6 +34,7 @@
   transition: background var(--transition-normal), color var(--transition-normal);
   flex-shrink: 0;
   position: relative;
+  -webkit-app-region: no-drag;
 }
 
 .tab:hover {
@@ -107,6 +107,7 @@
   cursor: pointer;
   flex-shrink: 0;
   transition: color var(--transition-normal);
+  -webkit-app-region: no-drag;
 }
 
 .tab-new:hover {

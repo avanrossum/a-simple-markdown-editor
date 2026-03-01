@@ -30,6 +30,10 @@ class FileWatcher {
       this._debounce(filePath, () => callback(filePath), TIMING.FILE_WATCH_DEBOUNCE_MS);
     });
 
+    watcher.on('error', (err) => {
+      console.error('File watcher error:', err.message);
+    });
+
     this._watchers.set(filePath, watcher);
   }
 
@@ -55,12 +59,16 @@ class FileWatcher {
     this._dirWatcher = chokidar.watch(dirPath, {
       persistent: true,
       ignoreInitial: true,
-      depth: 10,
+      depth: 1,
       ignored: [
         /(^|[/\\])\../, // dotfiles
         '**/node_modules/**',
         '**/.git/**',
+        '**/dist/**',
+        '**/dist-renderer/**',
+        '**/build/**',
       ],
+      usePolling: false,
     });
 
     const debouncedCallback = () => {
@@ -71,6 +79,9 @@ class FileWatcher {
     this._dirWatcher.on('unlink', debouncedCallback);
     this._dirWatcher.on('addDir', debouncedCallback);
     this._dirWatcher.on('unlinkDir', debouncedCallback);
+    this._dirWatcher.on('error', (err) => {
+      console.error('Directory watcher error:', err.message);
+    });
   }
 
   unwatchDirectory() {
