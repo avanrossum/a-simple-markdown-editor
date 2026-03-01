@@ -75,6 +75,11 @@ function registerIpcHandlers({ store, fileWatcher, getMainWindow }) {
     return result;
   });
 
+  ipcMain.handle('dialog:message-box', async (_, options) => {
+    const result = await dialog.showMessageBox(getMainWindow(), options);
+    return result;
+  });
+
   ipcMain.handle('file:stat', async (_, filePath) => {
     try {
       const stat = fs.statSync(filePath);

@@ -2,9 +2,18 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 const { electronAPI } = window;
 
-function FileTreeItem({ entry, depth, onOpenFile }) {
+function FileTreeItem({ entry, depth, onOpenFile, refreshKey }) {
   const [expanded, setExpanded] = useState(false);
   const [children, setChildren] = useState([]);
+
+  // Re-fetch children when refreshKey changes and directory is expanded
+  useEffect(() => {
+    if (expanded && entry.isDirectory) {
+      electronAPI.readDirectory(entry.path).then((result) => {
+        if (result.success) setChildren(result.entries);
+      });
+    }
+  }, [refreshKey, expanded, entry.path, entry.isDirectory]);
 
   const toggleExpand = useCallback(async () => {
     if (!entry.isDirectory) {
@@ -51,6 +60,7 @@ function FileTreeItem({ entry, depth, onOpenFile }) {
               entry={child}
               depth={depth + 1}
               onOpenFile={onOpenFile}
+              refreshKey={refreshKey}
             />
           ))}
           {children.length === 0 && (
@@ -66,6 +76,7 @@ function FileTreeItem({ entry, depth, onOpenFile }) {
 
 export default function FileBrowser({ folderPath, onOpenFile, onSetFolder, onOpenSettings, width }) {
   const [entries, setEntries] = useState([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const loadDirectory = useCallback(async (dirPath) => {
     if (!dirPath) return;
@@ -82,7 +93,10 @@ export default function FileBrowser({ folderPath, onOpenFile, onSetFolder, onOpe
 
   useEffect(() => {
     const unsub = electronAPI.onDirectoryChanged(() => {
-      if (folderPath) loadDirectory(folderPath);
+      if (folderPath) {
+        loadDirectory(folderPath);
+        setRefreshKey((k) => k + 1);
+      }
     });
     return unsub;
   }, [folderPath, loadDirectory]);
@@ -111,6 +125,7 @@ export default function FileBrowser({ folderPath, onOpenFile, onSetFolder, onOpe
                 entry={entry}
                 depth={0}
                 onOpenFile={onOpenFile}
+                refreshKey={refreshKey}
               />
             ))}
           </div>

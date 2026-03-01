@@ -1,57 +1,249 @@
-import React, { useEffect, useRef, useMemo } from 'react';
-import { marked } from 'marked';
+import React, { useEffect, useRef, useMemo, useCallback } from 'react';
+import { Marked } from 'marked';
 
-// Configure marked for safe rendering
-marked.setOptions({
-  breaks: true,
-  gfm: true,
-});
+// ── Marked instance with source-line annotations ──
+
+function createAnnotatedRenderer() {
+  const md = new Marked({ breaks: true, gfm: true });
+
+  md.use({
+    renderer: {
+      heading(token) {
+        const text = this.parser.parseInline(token.tokens);
+        const attr = token._sourceLine != null ? ` data-source-line="${token._sourceLine}"` : '';
+        return `<h${token.depth}${attr}>${text}</h${token.depth}>\n`;
+      },
+      paragraph(token) {
+        const text = this.parser.parseInline(token.tokens);
+        const attr = token._sourceLine != null ? ` data-source-line="${token._sourceLine}"` : '';
+        return `<p${attr}>${text}</p>\n`;
+      },
+      code(token) {
+        const langClass = token.lang ? ` class="language-${token.lang}"` : '';
+        const attr = token._sourceLine != null ? ` data-source-line="${token._sourceLine}"` : '';
+        const escaped = token.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return `<pre${attr}><code${langClass}>${escaped}</code></pre>\n`;
+      },
+      blockquote(token) {
+        const body = this.parser.parse(token.tokens);
+        const attr = token._sourceLine != null ? ` data-source-line="${token._sourceLine}"` : '';
+        return `<blockquote${attr}>\n${body}</blockquote>\n`;
+      },
+      list(token) {
+        const tag = token.ordered ? 'ol' : 'ul';
+        const startAttr = token.ordered && token.start !== 1 ? ` start="${token.start}"` : '';
+        const attr = token._sourceLine != null ? ` data-source-line="${token._sourceLine}"` : '';
+        let body = '';
+        for (const item of token.items) {
+          body += this.listitem(item);
+        }
+        return `<${tag}${startAttr}${attr}>\n${body}</${tag}>\n`;
+      },
+      hr(token) {
+        const attr = token._sourceLine != null ? ` data-source-line="${token._sourceLine}"` : '';
+        return `<hr${attr} />\n`;
+      },
+      table(token) {
+        const attr = token._sourceLine != null ? ` data-source-line="${token._sourceLine}"` : '';
+        let head = '<thead>\n<tr>\n';
+        for (const cell of token.header) {
+          const align = cell.align ? ` style="text-align:${cell.align}"` : '';
+          head += `<th${align}>${this.parser.parseInline(cell.tokens)}</th>\n`;
+        }
+        head += '</tr>\n</thead>\n';
+        let body = '';
+        if (token.rows.length) {
+          body = '<tbody>\n';
+          for (const row of token.rows) {
+            body += '<tr>\n';
+            for (const cell of row) {
+              const align = cell.align ? ` style="text-align:${cell.align}"` : '';
+              body += `<td${align}>${this.parser.parseInline(cell.tokens)}</td>\n`;
+            }
+            body += '</tr>\n';
+          }
+          body += '</tbody>\n';
+        }
+        return `<table${attr}>\n${head}${body}</table>\n`;
+      },
+    },
+  });
+
+  return {
+    parse(content) {
+      if (!content) return '';
+      try {
+        const tokens = md.lexer(content);
+
+        // Annotate top-level tokens with source line numbers
+        let pos = 0;
+        for (const token of tokens) {
+          if (token.type !== 'space') {
+            let line = 0;
+            for (let i = 0; i < pos && i < content.length; i++) {
+              if (content[i] === '\n') line++;
+            }
+            token._sourceLine = line;
+          }
+          pos += token.raw.length;
+        }
+
+        return md.parser(tokens);
+      } catch {
+        return '<p>Error rendering markdown</p>';
+      }
+    },
+  };
+}
+
+const annotatedMd = createAnnotatedRenderer();
+
+// ── Scroll Sync Constants ──
+
+const SYNC_COOLDOWN_MS = 80;
+
+// ── Preview Component ──
 
 export default function Preview({ content, theme, editorRef }) {
   const previewRef = useRef(null);
-  const isScrolling = useRef(false);
-  const scrollTimeout = useRef(null);
+  const scrollSourceRef = useRef(null); // 'editor' | 'preview' | null
+  const cooldownTimerRef = useRef(null);
 
-  // Parse markdown
-  const html = useMemo(() => {
-    try {
-      return marked.parse(content || '');
-    } catch {
-      return '<p>Error rendering markdown</p>';
+  // Parse markdown with source line annotations
+  const html = useMemo(() => annotatedMd.parse(content), [content]);
+
+  // ── Build Anchor Map ──
+
+  const buildAnchorMap = useCallback(() => {
+    const preview = previewRef.current;
+    const editor = editorRef?.current;
+    if (!preview || !editor) return [];
+
+    const elements = preview.querySelectorAll('[data-source-line]');
+    const anchors = [];
+
+    for (const el of elements) {
+      const sourceLine = parseInt(el.dataset.sourceLine, 10);
+      if (isNaN(sourceLine)) continue;
+
+      // Editor: pixel position of this source line (1-based in CodeMirror)
+      const editorY = editor.getLineTop(sourceLine + 1);
+
+      // Preview: pixel position relative to scroll container
+      const previewY = el.offsetTop;
+
+      anchors.push({ editorY, previewY });
     }
-  }, [content]);
 
-  // ── Synchronized Scrolling ──
+    // Sort by editor position and deduplicate
+    anchors.sort((a, b) => a.editorY - b.editorY);
+    return anchors;
+  }, [editorRef]);
+
+  // ── Interpolate Scroll Position ──
+
+  const interpolateScroll = useCallback((anchors, sourceScroll, sourceKey, targetKey, sourceMax, targetMax) => {
+    if (anchors.length === 0 || sourceMax <= 0) {
+      return targetMax > 0 && sourceMax > 0 ? (sourceScroll / sourceMax) * targetMax : 0;
+    }
+
+    // Virtual start and end anchors for smooth edges
+    const points = [
+      { editorY: 0, previewY: 0 },
+      ...anchors,
+      { editorY: sourceMax, previewY: targetMax },
+    ];
+
+    // Find bracketing points
+    let lower = points[0];
+    let upper = points[points.length - 1];
+
+    for (let i = 0; i < points.length - 1; i++) {
+      if (points[i][sourceKey] <= sourceScroll && points[i + 1][sourceKey] > sourceScroll) {
+        lower = points[i];
+        upper = points[i + 1];
+        break;
+      }
+    }
+
+    const range = upper[sourceKey] - lower[sourceKey];
+    if (range <= 0) return lower[targetKey];
+
+    const fraction = (sourceScroll - lower[sourceKey]) / range;
+    return lower[targetKey] + fraction * (upper[targetKey] - lower[targetKey]);
+  }, []);
+
+  // ── Scroll Lock ──
+
+  const setScrollSource = useCallback((source) => {
+    scrollSourceRef.current = source;
+    if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+    cooldownTimerRef.current = setTimeout(() => {
+      scrollSourceRef.current = null;
+    }, SYNC_COOLDOWN_MS);
+  }, []);
+
+  // ── Editor → Preview Sync ──
 
   useEffect(() => {
-    if (!editorRef?.current) return;
+    const editor = editorRef?.current;
+    if (!editor) return;
 
-    const unsubscribe = editorRef.current.onScroll(() => {
-      if (isScrolling.current) return;
+    const unsubscribe = editor.onScroll(() => {
+      if (scrollSourceRef.current === 'preview') return;
 
-      const info = editorRef.current.getScrollInfo();
       const preview = previewRef.current;
       if (!preview) return;
 
-      const editorScrollFraction =
-        info.scrollHeight <= info.clientHeight
-          ? 0
-          : info.scrollTop / (info.scrollHeight - info.clientHeight);
+      const anchors = buildAnchorMap();
+      const info = editor.getScrollInfo();
+      const editorMax = info.scrollHeight - info.clientHeight;
+      const previewMax = preview.scrollHeight - preview.clientHeight;
 
-      const previewMaxScroll = preview.scrollHeight - preview.clientHeight;
-      if (previewMaxScroll > 0) {
-        isScrolling.current = true;
-        preview.scrollTop = editorScrollFraction * previewMaxScroll;
+      if (editorMax <= 0 || previewMax <= 0) return;
 
-        if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
-        scrollTimeout.current = setTimeout(() => {
-          isScrolling.current = false;
-        }, 50);
-      }
+      const target = interpolateScroll(anchors, info.scrollTop, 'editorY', 'previewY', editorMax, previewMax);
+
+      setScrollSource('editor');
+      preview.scrollTop = Math.round(target);
     });
 
     return unsubscribe;
-  }, [editorRef]);
+  }, [editorRef, buildAnchorMap, interpolateScroll, setScrollSource]);
+
+  // ── Preview → Editor Sync ──
+
+  useEffect(() => {
+    const preview = previewRef.current;
+    const editor = editorRef?.current;
+    if (!preview || !editor) return;
+
+    const handlePreviewScroll = () => {
+      if (scrollSourceRef.current === 'editor') return;
+
+      const anchors = buildAnchorMap();
+      const info = editor.getScrollInfo();
+      const editorMax = info.scrollHeight - info.clientHeight;
+      const previewMax = preview.scrollHeight - preview.clientHeight;
+
+      if (editorMax <= 0 || previewMax <= 0) return;
+
+      const target = interpolateScroll(anchors, preview.scrollTop, 'previewY', 'editorY', previewMax, editorMax);
+
+      setScrollSource('preview');
+      editor.scrollToPixel(Math.round(target));
+    };
+
+    preview.addEventListener('scroll', handlePreviewScroll, { passive: true });
+    return () => preview.removeEventListener('scroll', handlePreviewScroll);
+  }, [editorRef, buildAnchorMap, interpolateScroll, setScrollSource]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+    };
+  }, []);
 
   return (
     <div

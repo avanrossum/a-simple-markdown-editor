@@ -94,6 +94,9 @@ const electronAPI = {
     return () => ipcRenderer.removeListener('show-about', handler);
   },
 
+  // ── Dialogs ──
+  showMessageBox: (options) => ipcRenderer.invoke('dialog:message-box', options),
+
   // ── App Info ──
   getVersion: () => ipcRenderer.invoke('app:version'),
   openExternal: (url) => ipcRenderer.invoke('app:open-external', url),

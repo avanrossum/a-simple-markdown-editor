@@ -27,10 +27,10 @@ const darkTheme = EditorView.theme({
     borderLeftColor: 'var(--accent)',
   },
   '.cm-selectionBackground, &.cm-focused .cm-selectionBackground': {
-    backgroundColor: 'var(--accent-selection)',
+    backgroundColor: 'var(--accent-selection) !important',
   },
   '.cm-activeLine': {
-    backgroundColor: 'var(--bg-elevated)',
+    backgroundColor: 'color-mix(in srgb, var(--bg-elevated) 60%, transparent)',
   },
   '.cm-gutters': {
     backgroundColor: 'var(--bg-surface)',
@@ -67,10 +67,10 @@ const lightTheme = EditorView.theme({
     borderLeftColor: 'var(--accent)',
   },
   '.cm-selectionBackground, &.cm-focused .cm-selectionBackground': {
-    backgroundColor: 'var(--accent-selection)',
+    backgroundColor: 'var(--accent-selection) !important',
   },
   '.cm-activeLine': {
-    backgroundColor: 'var(--bg-elevated)',
+    backgroundColor: 'color-mix(in srgb, var(--bg-elevated) 60%, transparent)',
   },
   '.cm-gutters': {
     backgroundColor: 'var(--bg-surface)',
@@ -270,6 +270,35 @@ const Editor = forwardRef(function Editor({ content, onChange, settings, theme }
         scrollHeight: scroller.scrollHeight,
         clientHeight: scroller.clientHeight,
       };
+    },
+
+    getTopVisibleLine() {
+      const view = viewRef.current;
+      if (!view) return 0;
+      const top = view.scrollDOM.scrollTop;
+      const block = view.lineBlockAtHeight(top);
+      return view.state.doc.lineAt(block.from).number;
+    },
+
+    getLineTop(lineNum) {
+      const view = viewRef.current;
+      if (!view) return 0;
+      const lineCount = view.state.doc.lines;
+      const clampedLine = Math.max(1, Math.min(lineNum, lineCount));
+      const pos = view.state.doc.line(clampedLine).from;
+      const block = view.lineBlockAt(pos);
+      return block.top;
+    },
+
+    scrollToPixel(px) {
+      const view = viewRef.current;
+      if (!view) return;
+      view.scrollDOM.scrollTop = px;
+    },
+
+    getScrollDOM() {
+      const view = viewRef.current;
+      return view ? view.scrollDOM : null;
     },
 
     onScroll(callback) {

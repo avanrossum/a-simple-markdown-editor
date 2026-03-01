@@ -7,10 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Save-before-close confirmation dialog for dirty files
+- Bidirectional synchronized scrolling between editor and preview using section-based anchor mapping
+- File browser auto-refreshes expanded subdirectories when file system changes are detected
+
 ### Fixed
 
 - EMFILE crash when opening folders with many files (reduced watch depth, added ignore patterns)
 - Title bar drag region: empty space between tabs is now draggable to move the window
+- Text selection visibility: increased selection highlight contrast and reduced active line highlight opacity
+- File browser not updating after duplicating/saving new files
 
 ## [0.1.0] - 2026-03-01
 

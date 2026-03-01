@@ -36,13 +36,15 @@
 - [x] Tab bar with open files
 - [x] Tab close, new tab, switch tabs
 - [x] Dirty indicator on tabs (unsaved changes dot)
+- [x] Save-before-close confirmation for dirty files
 - [x] File watching (detect external changes)
 - [x] External change diff view with resolve options
+- [x] File browser auto-refresh on file system changes (including subdirectories)
 
 ### Preview
 
 - [x] Live markdown preview (right pane)
-- [x] Synchronized scrolling (editor ↔ preview)
+- [x] Section-based bidirectional synchronized scrolling (editor ↔ preview)
 - [x] GitHub Flavored Markdown rendering
 
 ### Settings

@@ -168,9 +168,32 @@ export default function App() {
     setActiveTabId(tab.id);
   }, []);
 
-  const closeTab = useCallback((tabId) => {
+  const closeTab = useCallback(async (tabId) => {
     const tab = tabs.find((t) => t.id === tabId);
-    if (tab?.filePath) {
+    if (!tab) return;
+
+    // Prompt to save if dirty
+    if (tab.content !== tab.savedContent) {
+      const result = await electronAPI.showMessageBox({
+        type: 'warning',
+        buttons: ['Save', "Don't Save", 'Cancel'],
+        defaultId: 0,
+        cancelId: 2,
+        message: `Do you want to save changes to "${getTabName(tab)}"?`,
+        detail: 'Your changes will be lost if you close without saving.',
+      });
+
+      if (result.response === 0) {
+        // Save
+        await saveTab(tabId);
+      } else if (result.response === 2) {
+        // Cancel
+        return;
+      }
+      // response === 1 means Don't Save — continue closing
+    }
+
+    if (tab.filePath) {
       electronAPI.unwatchFile(tab.filePath);
     }
 
@@ -188,7 +211,7 @@ export default function App() {
       }
       return next;
     });
-  }, [tabs, activeTabId]);
+  }, [tabs, activeTabId, saveTab]);
 
   const duplicateFile = useCallback(async () => {
     if (!activeTab) return;
