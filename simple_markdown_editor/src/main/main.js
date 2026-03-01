@@ -12,7 +12,7 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 // ── State ──
-let mainWindow = null;
+const windows = new Set();
 const store = new Store();
 const fileWatcher = new FileWatcher();
 const isDev = process.argv.includes('--dev');
@@ -27,14 +27,17 @@ function getBackgroundColor() {
   return THEME_BG_COLORS[theme] || THEME_BG_COLORS.dark;
 }
 
-function createMainWindow() {
+function createWindow() {
   const savedBounds = store.getWindowBounds();
 
-  mainWindow = new BrowserWindow({
+  // Offset new windows so they don't stack exactly on top
+  const offset = windows.size * 22;
+
+  const win = new BrowserWindow({
     width: savedBounds?.width || WINDOW_DEFAULTS.DEFAULT_WIDTH,
     height: savedBounds?.height || WINDOW_DEFAULTS.DEFAULT_HEIGHT,
-    x: savedBounds?.x,
-    y: savedBounds?.y,
+    x: savedBounds?.x != null ? savedBounds.x + offset : undefined,
+    y: savedBounds?.y != null ? savedBounds.y + offset : undefined,
     minWidth: WINDOW_DEFAULTS.MIN_WIDTH,
     minHeight: WINDOW_DEFAULTS.MIN_HEIGHT,
     backgroundColor: getBackgroundColor(),
@@ -49,14 +52,16 @@ function createMainWindow() {
     },
   });
 
+  windows.add(win);
+
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
+    win.loadURL('http://localhost:5173');
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../../dist-renderer/main/index.html'));
+    win.loadFile(path.join(__dirname, '../../dist-renderer/main/index.html'));
   }
 
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
+  win.once('ready-to-show', () => {
+    win.show();
   });
 
   // Save window bounds on resize/move (debounced)
@@ -64,73 +69,73 @@ function createMainWindow() {
   const saveBounds = () => {
     if (boundsTimer) clearTimeout(boundsTimer);
     boundsTimer = setTimeout(() => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        store.setWindowBounds(mainWindow.getBounds());
+      if (win && !win.isDestroyed()) {
+        store.setWindowBounds(win.getBounds());
       }
     }, TIMING.BOUNDS_SAVE_DEBOUNCE_MS);
   };
 
-  mainWindow.on('resize', saveBounds);
-  mainWindow.on('move', saveBounds);
+  win.on('resize', saveBounds);
+  win.on('move', saveBounds);
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
+  win.on('closed', () => {
+    windows.delete(win);
   });
 
   // Security: prevent navigation and new windows
-  mainWindow.webContents.on('will-navigate', (e) => e.preventDefault());
-  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  win.webContents.on('will-navigate', (e) => e.preventDefault());
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+
+  return win;
 }
 
 // ── Menu Actions ──
 
-function getMainWindow() {
-  return mainWindow;
+function getFocusedWindow() {
+  return BrowserWindow.getFocusedWindow() || [...windows][0] || null;
+}
+
+function sendToFocused(channel, ...args) {
+  const win = getFocusedWindow();
+  if (win && !win.isDestroyed()) {
+    win.webContents.send(channel, ...args);
+  }
 }
 
 function handleMenuOpen(filePath) {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('open-file', filePath);
-    store.addRecentFile(filePath);
-  }
+  sendToFocused('open-file', filePath);
+  store.addRecentFile(filePath);
 }
 
 function handleMenuSave() {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('menu-save');
-  }
+  sendToFocused('menu-save');
 }
 
 function handleMenuSaveAs() {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('menu-save-as');
-  }
+  sendToFocused('menu-save-as');
 }
 
 function handleMenuNewFile() {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('menu-new-file');
-  }
+  sendToFocused('menu-new-file');
 }
 
 function handleMenuNewWindow() {
-  // For v0.1.0, just create a new untitled tab
-  handleMenuNewFile();
+  createWindow();
 }
 
 function handleMenuOpenFolder(dirPath) {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('open-folder', dirPath);
-    store.addRecentDirectory(dirPath);
-  }
+  sendToFocused('open-folder', dirPath);
+  store.addRecentDirectory(dirPath);
 }
 
 // ── Theme ──
 
 function broadcastTheme() {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    const theme = nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
-    mainWindow.webContents.send('app:theme-changed', theme);
+  const theme = nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
+  for (const win of windows) {
+    if (!win.isDestroyed()) {
+      win.webContents.send('app:theme-changed', theme);
+    }
   }
 }
 
@@ -144,16 +149,16 @@ app.whenReady().then(() => {
     return net.fetch(`file://${filePath}`);
   });
 
-  createMainWindow();
+  createWindow();
 
   registerIpcHandlers({
     store,
     fileWatcher,
-    getMainWindow,
+    getFocusedWindow,
   });
 
   buildAndSetMenu({
-    getMainWindow,
+    getFocusedWindow,
     store,
     onOpen: handleMenuOpen,
     onSave: handleMenuSave,
@@ -168,14 +173,21 @@ app.whenReady().then(() => {
   // Open files dropped on dock icon (macOS)
   app.on('open-file', (event, filePath) => {
     event.preventDefault();
-    if (mainWindow) {
+    if (windows.size > 0) {
       handleMenuOpen(filePath);
+    } else {
+      // No windows open — create one then open the file
+      const win = createWindow();
+      win.webContents.once('did-finish-load', () => {
+        win.webContents.send('open-file', filePath);
+        store.addRecentFile(filePath);
+      });
     }
   });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createMainWindow();
+      createWindow();
     }
   });
 });

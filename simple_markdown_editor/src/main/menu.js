@@ -1,7 +1,7 @@
 const { Menu, app, dialog, shell } = require('electron');
 const path = require('path');
 
-function buildMenu({ getMainWindow, store, onOpen, onSave, onSaveAs, onNewFile, onNewWindow, onOpenFolder }) {
+function buildMenu({ getFocusedWindow, store, onOpen, onSave, onSaveAs, onNewFile, onNewWindow, onOpenFolder }) {
   const isMac = process.platform === 'darwin';
 
   const recentFiles = store.getRecentFiles();
@@ -17,7 +17,7 @@ function buildMenu({ getMainWindow, store, onOpen, onSave, onSaveAs, onNewFile, 
           label: 'Clear Recent',
           click: () => {
             store.clearRecentFiles();
-            buildAndSetMenu({ getMainWindow, store, onOpen, onSave, onSaveAs, onNewFile, onNewWindow, onOpenFolder });
+            buildAndSetMenu({ getFocusedWindow, store, onOpen, onSave, onSaveAs, onNewFile, onNewWindow, onOpenFolder });
           },
         },
       ]
@@ -35,7 +35,7 @@ function buildMenu({ getMainWindow, store, onOpen, onSave, onSaveAs, onNewFile, 
                 label: 'Settings...',
                 accelerator: 'Cmd+,',
                 click: () => {
-                  const win = getMainWindow();
+                  const win = getFocusedWindow();
                   if (win) win.webContents.send('show-settings');
                 },
               },
@@ -69,7 +69,7 @@ function buildMenu({ getMainWindow, store, onOpen, onSave, onSaveAs, onNewFile, 
           label: 'Open File...',
           accelerator: 'CmdOrCtrl+O',
           click: async () => {
-            const result = await dialog.showOpenDialog(getMainWindow(), {
+            const result = await dialog.showOpenDialog(getFocusedWindow(), {
               properties: ['openFile'],
               filters: [
                 { name: 'Markdown', extensions: ['md', 'markdown', 'mdown', 'mkd', 'txt'] },
@@ -85,7 +85,7 @@ function buildMenu({ getMainWindow, store, onOpen, onSave, onSaveAs, onNewFile, 
           label: 'Open Folder...',
           accelerator: 'CmdOrCtrl+Shift+O',
           click: async () => {
-            const result = await dialog.showOpenDialog(getMainWindow(), {
+            const result = await dialog.showOpenDialog(getFocusedWindow(), {
               properties: ['openDirectory'],
             });
             if (!result.canceled && result.filePaths[0]) {
@@ -111,7 +111,7 @@ function buildMenu({ getMainWindow, store, onOpen, onSave, onSaveAs, onNewFile, 
         {
           label: 'Duplicate',
           click: () => {
-            const win = getMainWindow();
+            const win = getFocusedWindow();
             if (win) win.webContents.send('duplicate-file');
           },
         },
@@ -120,7 +120,7 @@ function buildMenu({ getMainWindow, store, onOpen, onSave, onSaveAs, onNewFile, 
           label: 'Close Tab',
           accelerator: 'CmdOrCtrl+W',
           click: () => {
-            const win = getMainWindow();
+            const win = getFocusedWindow();
             if (win) win.webContents.send('close-tab');
           },
         },
@@ -141,7 +141,7 @@ function buildMenu({ getMainWindow, store, onOpen, onSave, onSaveAs, onNewFile, 
           label: 'Find',
           accelerator: 'CmdOrCtrl+F',
           click: () => {
-            const win = getMainWindow();
+            const win = getFocusedWindow();
             if (win) win.webContents.send('toggle-search');
           },
         },
@@ -149,7 +149,7 @@ function buildMenu({ getMainWindow, store, onOpen, onSave, onSaveAs, onNewFile, 
           label: 'Find and Replace',
           accelerator: 'CmdOrCtrl+H',
           click: () => {
-            const win = getMainWindow();
+            const win = getFocusedWindow();
             if (win) win.webContents.send('toggle-search-replace');
           },
         },
@@ -185,7 +185,7 @@ function buildMenu({ getMainWindow, store, onOpen, onSave, onSaveAs, onNewFile, 
         {
           label: 'About Simple Markdown Editor',
           click: () => {
-            const win = getMainWindow();
+            const win = getFocusedWindow();
             if (win) win.webContents.send('show-about');
           },
         },

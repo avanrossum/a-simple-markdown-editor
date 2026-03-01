@@ -1,8 +1,22 @@
-const { ipcMain, dialog, shell, app, nativeTheme } = require('electron');
+const { ipcMain, dialog, shell, app, nativeTheme, BrowserWindow } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
-function registerIpcHandlers({ store, fileWatcher, getMainWindow }) {
+function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
+
+  // Helper: get the window that sent an IPC event
+  function getWindowFromEvent(event) {
+    return BrowserWindow.fromWebContents(event.sender);
+  }
+
+  // Helper: broadcast to all open windows
+  function broadcast(channel, ...args) {
+    for (const win of BrowserWindow.getAllWindows()) {
+      if (!win.isDestroyed()) {
+        win.webContents.send(channel, ...args);
+      }
+    }
+  }
 
   // ── File Operations ──
 
@@ -53,8 +67,8 @@ function registerIpcHandlers({ store, fileWatcher, getMainWindow }) {
     }
   });
 
-  ipcMain.handle('file:save-dialog', async (_, options) => {
-    const result = await dialog.showSaveDialog(getMainWindow(), {
+  ipcMain.handle('file:save-dialog', async (event, options) => {
+    const result = await dialog.showSaveDialog(getWindowFromEvent(event), {
       defaultPath: options?.defaultPath,
       filters: [
         { name: 'Markdown', extensions: ['md'] },
@@ -64,8 +78,8 @@ function registerIpcHandlers({ store, fileWatcher, getMainWindow }) {
     return result;
   });
 
-  ipcMain.handle('file:open-dialog', async (_, options) => {
-    const result = await dialog.showOpenDialog(getMainWindow(), {
+  ipcMain.handle('file:open-dialog', async (event, options) => {
+    const result = await dialog.showOpenDialog(getWindowFromEvent(event), {
       properties: options?.directory ? ['openDirectory'] : ['openFile'],
       filters: options?.directory ? undefined : [
         { name: 'Markdown', extensions: ['md', 'markdown', 'mdown', 'mkd', 'txt'] },
@@ -75,8 +89,8 @@ function registerIpcHandlers({ store, fileWatcher, getMainWindow }) {
     return result;
   });
 
-  ipcMain.handle('dialog:message-box', async (_, options) => {
-    const result = await dialog.showMessageBox(getMainWindow(), options);
+  ipcMain.handle('dialog:message-box', async (event, options) => {
+    const result = await dialog.showMessageBox(getWindowFromEvent(event), options);
     return result;
   });
 
@@ -109,10 +123,7 @@ function registerIpcHandlers({ store, fileWatcher, getMainWindow }) {
 
   ipcMain.handle('watch:file', async (_, filePath) => {
     fileWatcher.watchFile(filePath, (changedPath) => {
-      const win = getMainWindow();
-      if (win && !win.isDestroyed()) {
-        win.webContents.send('watch:file-changed', changedPath);
-      }
+      broadcast('watch:file-changed', changedPath);
     });
     return { success: true };
   });
@@ -124,10 +135,7 @@ function registerIpcHandlers({ store, fileWatcher, getMainWindow }) {
 
   ipcMain.handle('watch:directory', async (_, dirPath) => {
     fileWatcher.watchDirectory(dirPath, (changedDir) => {
-      const win = getMainWindow();
-      if (win && !win.isDestroyed()) {
-        win.webContents.send('watch:directory-changed', changedDir);
-      }
+      broadcast('watch:directory-changed', changedDir);
     });
     return { success: true };
   });
@@ -140,19 +148,13 @@ function registerIpcHandlers({ store, fileWatcher, getMainWindow }) {
 
   ipcMain.handle('settings:set', async (_, key, value) => {
     store.setSetting(key, value);
-    const win = getMainWindow();
-    if (win && !win.isDestroyed()) {
-      win.webContents.send('settings:changed', store.getSettings());
-    }
+    broadcast('settings:changed', store.getSettings());
     return { success: true };
   });
 
   ipcMain.handle('settings:set-multiple', async (_, updates) => {
     store.setSettings(updates);
-    const win = getMainWindow();
-    if (win && !win.isDestroyed()) {
-      win.webContents.send('settings:changed', store.getSettings());
-    }
+    broadcast('settings:changed', store.getSettings());
     return { success: true };
   });
 
