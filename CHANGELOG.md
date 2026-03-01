@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-03-01
+
+### Fixed
+
+- Directory watcher errors (EACCES/EAGAIN) when browsing near system directories like /dev
+- New file context menu action not showing inline rename input
+- Rename not refreshing file browser tree to reflect new name
+
+## [0.1.5] - 2026-03-01
+
+### Added
+
+- File browser: active file is auto-revealed and highlighted when switching tabs
+- Session restore: open tabs, active tab, and folder path persist across app restarts
+- File browser: right-click context menu with New Markdown File, New Folder, and Rename
+- File browser: inline rename editing for files and folders
+- MIT LICENSE file
+
+## [0.1.4] - 2026-03-01
+
+### Fixed
+
+- Closing dirty tab with "Save" then canceling save dialog no longer discards the tab
+
+## [0.1.3] - 2026-03-01
+
+### Added
+
+- Multi-window support: Cmd+Shift+N opens a new independent window
+
+## [0.1.2] - 2026-03-01
+
+### Fixed
+
+- Cmd+W closes the active tab instead of the whole window
+
+## [0.1.1] - 2026-03-01
+
 ### Added
 
 - Save-before-close confirmation dialog for dirty files
@@ -18,13 +56,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Preview font family selector (system fonts: Helvetica Neue, Georgia, Palatino, Avenir Next, Charter)
 - Theme selector: segmented control (Dark / Light / System) matching design standards
 - Editor font family options switched to system monospace fonts (SF Mono, Menlo, Monaco, Courier New, Andale Mono)
-- Multi-window support: Cmd+Shift+N opens a new independent window
-- Cmd+W closes the active tab instead of the whole window
-- File browser: active file is auto-revealed and highlighted when switching tabs
-- Session restore: open tabs, active tab, and folder path persist across app restarts
-- File browser: right-click context menu with New Markdown File, New Folder, and Rename
-- File browser: inline rename editing for files and folders
-- MIT LICENSE file
 
 ### Changed
 
@@ -40,10 +71,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Font size setting not applying to editor
 - Font family setting not applying to editor
 - Preview font family now respects settings
-- Closing dirty tab with "Save" then canceling save dialog no longer discards the tab
-- Directory watcher errors (EACCES/EAGAIN) when browsing near system directories like /dev
-- New file context menu action not showing inline rename input
-- Rename not refreshing file browser tree to reflect new name
 
 ## [0.1.0] - 2026-03-01
 

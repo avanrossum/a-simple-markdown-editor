@@ -85,7 +85,7 @@ The application source lives in the `simple_markdown_editor/` subdirectory. This
 
 ## Status
 
-v0.1.0 is feature-complete. Remaining work is build signing and distribution. See [ROADMAP.md](ROADMAP.md) for what's planned.
+v0.1.6 is feature-complete but currently untested and unreviewed. Incremental code review and testing will be completed before work on v0.2.0 begins. See [ROADMAP.md](ROADMAP.md) for what's planned.
 
 ## License
 
