@@ -4,7 +4,7 @@ A dead simple markdown editor for macOS. Fast, focused, and free of bloat.
 
 I live in markdown daily. Every editor I tried was either too expensive, too slow, too feature-rich, or too buggy. So I built the one I actually wanted to use — three panes, no cloud, no account, no subscription. Just a clean editor, a live preview, and a file browser that stays out of your way.
 
-[![Download](https://img.shields.io/badge/download-latest-blue)](https://github.com/avanrossum/a_simple_markdown_editor/releases/latest)
+[![Download](https://img.shields.io/badge/download-latest-blue)](https://github.com/avanrossum/a-simple-markdown-editor/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Website](https://img.shields.io/badge/website-mipyip.com-blue)](https://mipyip.com/products/simple-markdown-editor)
 
@@ -12,7 +12,7 @@ I live in markdown daily. Every editor I tried was either too expensive, too slo
 
 ## Download
 
-Grab the latest `.dmg` from [GitHub Releases](https://github.com/avanrossum/a_simple_markdown_editor/releases/latest). Open it, drag to Applications, done.
+Grab the latest `.dmg` from [GitHub Releases](https://github.com/avanrossum/a-simple-markdown-editor/releases/latest). Open it, drag to Applications, done.
 
 Signed and notarized with Apple — no Gatekeeper warnings. macOS 12+ required. Apple Silicon supported.
 
@@ -72,7 +72,7 @@ This app underwent an adversarial security review with comprehensive hardening:
 
 ### From release
 
-Download the `.dmg` from [Releases](https://github.com/avanrossum/a_simple_markdown_editor/releases/latest), open it, drag to Applications.
+Download the `.dmg` from [Releases](https://github.com/avanrossum/a-simple-markdown-editor/releases/latest), open it, drag to Applications.
 
 ### From source
 
