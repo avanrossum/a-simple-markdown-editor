@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.27] - 2026-03-02
+
+### Fixed
+
+- Remote images not loading in preview (added `https:` to CSP img-src)
+
+### Changed
+
+- README: added download link, screenshot placeholder, project motivation, and feature overview
+
 ## [0.1.26] - 2026-03-02
 
 ### Fixed

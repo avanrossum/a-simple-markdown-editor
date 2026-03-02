@@ -28,7 +28,7 @@ module.exports = {
   publish: {
     provider: 'github',
     owner: 'avanrossum',
-    repo: 'simple-markdown-editor',
+    repo: 'a_simple_markdown_editor',
     releaseType: 'release',
   },
 };

@@ -2,49 +2,50 @@
 
 A stupid simple markdown editor for macOS. Fast, focused, and free of bloat.
 
-Built with Electron, React, and CodeMirror 6. A clean three-pane layout that gets out of your way.
+I live in markdown daily. Every app I tried was either bloated, expensive, or buggy — so I built the editor I actually wanted to use. No account required, no subscription, no electron-sized feature creep. Just a clean editor, a live preview, and a file browser that stays out of your way.
 
-![License](https://img.shields.io/badge/license-MIT-blue)
+[![Download](https://img.shields.io/github/v/release/avanrossum/simple-markdown-editor?label=Download&color=blue)](https://github.com/avanrossum/simple-markdown-editor/releases/latest)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-## Features
+## Download
 
-**Editor**
-- CodeMirror 6 with markdown syntax highlighting
-- Formatting toolbar — bold, italic, strikethrough, headings, lists, code blocks, links, images, horizontal rules
-- Search and replace (Cmd+F / Cmd+H)
-- Toggleable line numbers
+Grab the latest `.dmg` from [GitHub Releases](https://github.com/avanrossum/simple-markdown-editor/releases/latest). Open it, drag to Applications, done.
 
-**Preview**
-- Live markdown preview with GitHub Flavored Markdown
-- Bidirectional scroll sync between editor and preview
-- Local image support
+macOS only. Requires macOS 12+.
 
-**File Management**
-- File browser with expandable directory tree
-- Tabs with dirty indicators
-- Right-click context menu — new file, new folder, rename
-- Session restore — open tabs and folder persist across restarts
-- File watching with external change detection and diff resolution
+## Screenshots
 
-**Customization**
-- Dark and light themes (or follow system)
-- 7 accent colors
-- Editor and preview font family selectors
-- Font size control
+![Simple Markdown Editor — editor and live preview](screenshot.png)
 
-## Screenshot
+![Settings](screenshot-settings.png)
 
-*Coming soon*
+## What it does
+
+**Editor** — CodeMirror 6 with markdown syntax highlighting, a formatting toolbar, search and replace, and toggleable line numbers. Everything you need, nothing you don't.
+
+**Live Preview** — GitHub Flavored Markdown rendered in real time. Bidirectional scroll sync keeps the editor and preview aligned. Local and remote images just work.
+
+**File Browser** — Expandable directory tree, tabs with dirty indicators, right-click context menu for new files, folders, and rename. Session restore remembers your open tabs and folder across restarts.
+
+**Customization** — Dark and light themes (or follow system), 7 accent colors, configurable editor and preview fonts, font size control.
+
+**Auto-Updates** — The app checks for updates automatically and lets you install with one click.
+
+## What it doesn't do
+
+No cloud sync. No collaboration. No plugin system. No Vim mode. No WYSIWYG. No proprietary format lock-in.
+
+Your files are markdown on disk. Open them with anything, anywhere, forever.
 
 ## Getting Started
+
+### From source
 
 ```bash
 cd simple_markdown_editor
 npm install
 npm run dev
 ```
-
-### Commands
 
 | Command | Description |
 |---------|-------------|
@@ -65,7 +66,7 @@ npm run dev
 
 ## Repository Structure
 
-The application source lives in the `simple_markdown_editor/` subdirectory. This is intentional — the outer repository holds project-level files (this README, license, changelog, roadmap) while the inner directory is the self-contained Electron app with its own `package.json`, build config, and source tree.
+The application source lives in `simple_markdown_editor/`. The outer repository holds project-level files (README, license, changelog, roadmap).
 
 ```
 .
@@ -80,12 +81,13 @@ The application source lives in the `simple_markdown_editor/` subdirectory. This
     └── src/
         ├── main/          # Electron main process
         ├── renderer/      # React UI (editor, preview, file browser)
-        └── settings/      # Settings overlay
+        ├── settings/      # Settings overlay
+        └── update-dialog/ # Auto-update UI
 ```
 
-## Status
+## Contributing
 
-v0.1.10 — auto-updates, image fix, app icon. See [ROADMAP.md](ROADMAP.md) for what's planned.
+This is a personal project built for my own use, but contributions are welcome. Open an issue first if you're planning something big.
 
 ## License
 
