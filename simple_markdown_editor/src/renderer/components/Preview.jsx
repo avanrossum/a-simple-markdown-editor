@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useRef, useMemo, useCallback, useState } from 'react';
 import { Marked } from 'marked';
 import DOMPurify from 'dompurify';
 
@@ -146,12 +146,15 @@ export default function Preview({ content, theme, editorRef, filePath }) {
     return parts.join('/');
   }, [filePath]);
 
-  // Parse markdown with source line annotations, then sanitize
-  const html = useMemo(() => {
-    const raw = annotatedMd.parse(content, baseDir);
-    return DOMPurify.sanitize(raw, {
-      ADD_ATTR: ['data-source-line'],
-    });
+  // Parse markdown with source line annotations, then sanitize (debounced)
+  const [html, setHtml] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const raw = annotatedMd.parse(content, baseDir);
+      setHtml(DOMPurify.sanitize(raw, { ADD_ATTR: ['data-source-line'] }));
+    }, 150);
+    return () => clearTimeout(timer);
   }, [content, baseDir]);
 
   // ── Build Anchor Map ──
