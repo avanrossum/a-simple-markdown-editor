@@ -274,8 +274,16 @@ export default function FileBrowser({ folderPath, onOpenFile, onSetFolder, onOpe
   const loadDirectory = useCallback(async (dirPath) => {
     if (!dirPath) return;
     const result = await electronAPI.readDirectory(dirPath);
-    if (result.success) setEntries(result.entries);
-  }, []);
+    if (result.success) {
+      setEntries(result.entries);
+    } else {
+      // Path not accessible (e.g. root /), fall back to home
+      const home = await electronAPI.getHomeDir();
+      if (home && home !== dirPath) {
+        onSetFolder(home);
+      }
+    }
+  }, [onSetFolder]);
 
   useEffect(() => {
     if (folderPath) {
@@ -305,7 +313,11 @@ export default function FileBrowser({ folderPath, onOpenFile, onSetFolder, onOpe
     if (!folderPath) return;
     const parent = await electronAPI.getParentDir(folderPath);
     if (parent && parent !== folderPath) {
-      onSetFolder(parent);
+      // Verify the parent is readable before navigating
+      const result = await electronAPI.readDirectory(parent);
+      if (result.success) {
+        onSetFolder(parent);
+      }
     }
   }, [folderPath, onSetFolder]);
 
