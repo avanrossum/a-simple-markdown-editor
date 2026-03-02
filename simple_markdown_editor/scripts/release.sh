@@ -30,7 +30,7 @@ npx electron-builder --config electron-builder.config.js --publish never
 # ── Git Tag ──
 
 echo "Creating git tag..."
-git add -A
+git add package.json package-lock.json
 git commit -m "chore: release v${VERSION}" || true
 git tag "v${VERSION}"
 git push origin main --tags
