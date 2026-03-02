@@ -1,6 +1,43 @@
 const { ipcMain, dialog, shell, app, nativeTheme, BrowserWindow } = require('electron');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
+
+// ── Path Validation ──
+// Defense-in-depth: restrict file operations to safe directories.
+// Prevents a compromised renderer from accessing sensitive files.
+
+const homeDir = os.homedir();
+
+const BLOCKED_HOME_SUBDIRS = [
+  '.ssh', '.gnupg', '.gpg', '.aws', '.docker', '.kube',
+  '.config/gcloud', '.config/gh',
+].map((p) => path.join(homeDir, p));
+
+function isPathAllowed(targetPath) {
+  if (typeof targetPath !== 'string' || !targetPath) return false;
+  const resolved = path.resolve(targetPath);
+
+  // Must be under home directory or /Volumes (external drives)
+  const underHome = resolved === homeDir || resolved.startsWith(homeDir + '/');
+  const underVolumes = resolved.startsWith('/Volumes/');
+  if (!underHome && !underVolumes) return false;
+
+  // Block sensitive subdirectories under home
+  if (underHome) {
+    for (const blocked of BLOCKED_HOME_SUBDIRS) {
+      if (resolved === blocked || resolved.startsWith(blocked + '/')) return false;
+    }
+  }
+
+  return true;
+}
+
+function requireValidPath(filePath) {
+  if (!isPathAllowed(filePath)) {
+    throw new Error(`Access denied: ${filePath}`);
+  }
+}
 
 function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
 
@@ -22,6 +59,7 @@ function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
 
   ipcMain.handle('file:read', async (_, filePath) => {
     try {
+      requireValidPath(filePath);
       const content = fs.readFileSync(filePath, 'utf-8');
       return { success: true, content };
     } catch (err) {
@@ -31,6 +69,7 @@ function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
 
   ipcMain.handle('file:write', async (_, filePath, content) => {
     try {
+      requireValidPath(filePath);
       const dir = path.dirname(filePath);
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(filePath, content, 'utf-8');
@@ -42,6 +81,7 @@ function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
 
   ipcMain.handle('file:read-directory', async (_, dirPath) => {
     try {
+      requireValidPath(dirPath);
       const entries = [];
       const items = fs.readdirSync(dirPath, { withFileTypes: true });
 
@@ -96,6 +136,7 @@ function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
 
   ipcMain.handle('file:stat', async (_, filePath) => {
     try {
+      requireValidPath(filePath);
       const stat = fs.statSync(filePath);
       return { success: true, mtime: stat.mtimeMs, size: stat.size };
     } catch (err) {
@@ -104,6 +145,7 @@ function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
   });
 
   ipcMain.handle('file:exists', async (_, filePath) => {
+    if (!isPathAllowed(filePath)) return false;
     return fs.existsSync(filePath);
   });
 
@@ -123,6 +165,8 @@ function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
 
   ipcMain.handle('file:rename', async (_, oldPath, newPath) => {
     try {
+      requireValidPath(oldPath);
+      requireValidPath(newPath);
       fs.renameSync(oldPath, newPath);
       return { success: true };
     } catch (err) {
@@ -132,6 +176,7 @@ function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
 
   ipcMain.handle('file:mkdir', async (_, dirPath) => {
     try {
+      requireValidPath(dirPath);
       fs.mkdirSync(dirPath, { recursive: true });
       return { success: true };
     } catch (err) {
@@ -141,6 +186,7 @@ function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
 
   ipcMain.handle('file:create', async (_, filePath, content = '') => {
     try {
+      requireValidPath(filePath);
       const dir = path.dirname(filePath);
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(filePath, content, 'utf-8');
@@ -152,6 +198,7 @@ function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
 
   ipcMain.handle('file:trash', async (_, filePath) => {
     try {
+      requireValidPath(filePath);
       await shell.trashItem(filePath);
       return { success: true };
     } catch (err) {
@@ -160,6 +207,7 @@ function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
   });
 
   ipcMain.handle('file:show-in-folder', async (_, filePath) => {
+    requireValidPath(filePath);
     shell.showItemInFolder(filePath);
     return { success: true };
   });
@@ -167,6 +215,7 @@ function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
   // ── File Watching ──
 
   ipcMain.handle('watch:file', async (_, filePath) => {
+    requireValidPath(filePath);
     fileWatcher.watchFile(filePath, (changedPath) => {
       broadcast('watch:file-changed', changedPath);
     });
@@ -174,11 +223,13 @@ function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
   });
 
   ipcMain.handle('watch:unwatch-file', async (_, filePath) => {
+    requireValidPath(filePath);
     fileWatcher.unwatchFile(filePath);
     return { success: true };
   });
 
   ipcMain.handle('watch:directory', async (_, dirPath) => {
+    requireValidPath(dirPath);
     fileWatcher.watchDirectory(dirPath, (changedDir) => {
       broadcast('watch:directory-changed', changedDir);
     });
