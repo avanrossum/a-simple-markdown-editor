@@ -137,6 +137,7 @@ export default function Preview({ content, theme, editorRef, filePath }) {
   const previewRef = useRef(null);
   const scrollSourceRef = useRef(null); // 'editor' | 'preview' | null
   const cooldownTimerRef = useRef(null);
+  const cachedAnchorsRef = useRef([]);
 
   // Derive base directory from file path
   const baseDir = useMemo(() => {
@@ -157,7 +158,7 @@ export default function Preview({ content, theme, editorRef, filePath }) {
     return () => clearTimeout(timer);
   }, [content, baseDir]);
 
-  // ── Build Anchor Map ──
+  // ── Build Anchor Map (cached, rebuilt on content change) ──
 
   const buildAnchorMap = useCallback(() => {
     const preview = previewRef.current;
@@ -171,19 +172,23 @@ export default function Preview({ content, theme, editorRef, filePath }) {
       const sourceLine = parseInt(el.dataset.sourceLine, 10);
       if (isNaN(sourceLine)) continue;
 
-      // Editor: pixel position of this source line (1-based in CodeMirror)
       const editorY = editor.getLineTop(sourceLine + 1);
-
-      // Preview: pixel position relative to scroll container
       const previewY = el.offsetTop;
 
       anchors.push({ editorY, previewY });
     }
 
-    // Sort by editor position and deduplicate
     anchors.sort((a, b) => a.editorY - b.editorY);
     return anchors;
   }, [editorRef]);
+
+  // Rebuild anchor cache when preview DOM updates
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      cachedAnchorsRef.current = buildAnchorMap();
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [html, buildAnchorMap]);
 
   // ── Interpolate Scroll Position ──
 
@@ -240,7 +245,7 @@ export default function Preview({ content, theme, editorRef, filePath }) {
       const preview = previewRef.current;
       if (!preview) return;
 
-      const anchors = buildAnchorMap();
+      const anchors = cachedAnchorsRef.current;
       const info = editor.getScrollInfo();
       const editorMax = info.scrollHeight - info.clientHeight;
       const previewMax = preview.scrollHeight - preview.clientHeight;
@@ -254,7 +259,7 @@ export default function Preview({ content, theme, editorRef, filePath }) {
     });
 
     return unsubscribe;
-  }, [editorRef, buildAnchorMap, interpolateScroll, setScrollSource]);
+  }, [editorRef, interpolateScroll, setScrollSource]);
 
   // ── Preview → Editor Sync ──
 
@@ -266,7 +271,7 @@ export default function Preview({ content, theme, editorRef, filePath }) {
     const handlePreviewScroll = () => {
       if (scrollSourceRef.current === 'editor') return;
 
-      const anchors = buildAnchorMap();
+      const anchors = cachedAnchorsRef.current;
       const info = editor.getScrollInfo();
       const editorMax = info.scrollHeight - info.clientHeight;
       const previewMax = preview.scrollHeight - preview.clientHeight;
@@ -281,7 +286,7 @@ export default function Preview({ content, theme, editorRef, filePath }) {
 
     preview.addEventListener('scroll', handlePreviewScroll, { passive: true });
     return () => preview.removeEventListener('scroll', handlePreviewScroll);
-  }, [editorRef, buildAnchorMap, interpolateScroll, setScrollSource]);
+  }, [editorRef, interpolateScroll, setScrollSource]);
 
   // Cleanup
   useEffect(() => {
