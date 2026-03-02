@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.31] - 2026-03-02
+
+### Fixed
+
+- Local/relative images broken in preview — DOMPurify was stripping `local-resource://` URLs as an unrecognized protocol
+
 ## [0.1.30] - 2026-03-02
 
 ### Fixed

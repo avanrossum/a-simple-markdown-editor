@@ -153,7 +153,7 @@ export default function Preview({ content, theme, editorRef, filePath }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       const raw = annotatedMd.parse(content, baseDir);
-      setHtml(DOMPurify.sanitize(raw, { ADD_ATTR: ['data-source-line'] }));
+      setHtml(DOMPurify.sanitize(raw, { ADD_ATTR: ['data-source-line'], ALLOWED_URI_REGEXP: /^(?:https?|data|local-resource):/i }));
     }, 150);
     return () => clearTimeout(timer);
   }, [content, baseDir]);
