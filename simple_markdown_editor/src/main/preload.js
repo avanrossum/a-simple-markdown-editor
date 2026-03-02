@@ -17,6 +17,8 @@ const electronAPI = {
   renameFile: (oldPath, newPath) => ipcRenderer.invoke('file:rename', oldPath, newPath),
   createDirectory: (dirPath) => ipcRenderer.invoke('file:mkdir', dirPath),
   createFile: (filePath, content) => ipcRenderer.invoke('file:create', filePath, content),
+  trashFile: (filePath) => ipcRenderer.invoke('file:trash', filePath),
+  showInFolder: (filePath) => ipcRenderer.invoke('file:show-in-folder', filePath),
 
   // ── File Watching ──
   watchFile: (filePath) => ipcRenderer.invoke('watch:file', filePath),
@@ -104,9 +106,9 @@ const electronAPI = {
     return () => ipcRenderer.removeListener('close-tab', handler);
   },
 
-  // ── Session ──
-  getSession: () => ipcRenderer.invoke('session:get'),
-  setSession: (data) => ipcRenderer.invoke('session:set', data),
+  // ── Session (per-window) ──
+  getSession: (windowId) => ipcRenderer.invoke('session:get', windowId),
+  setSession: (windowId, data) => ipcRenderer.invoke('session:set', windowId, data),
 
   // ── Dialogs ──
   showMessageBox: (options) => ipcRenderer.invoke('dialog:message-box', options),

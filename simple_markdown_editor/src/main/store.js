@@ -64,14 +64,31 @@ class Store {
     return [...(this._data.settings.recentDirectories || [])];
   }
 
-  // ── Session ──
+  // ── Session (per-window) ──
 
-  getSession() {
-    return this._data.session || null;
+  getWindowSession(windowId) {
+    return this._data.sessions?.[windowId] || null;
   }
 
-  setSession(sessionData) {
-    this._data.session = sessionData;
+  setWindowSession(windowId, sessionData) {
+    if (!this._data.sessions) this._data.sessions = {};
+    this._data.sessions[windowId] = sessionData;
+    this._debouncedSave();
+  }
+
+  removeWindowSession(windowId) {
+    if (this._data.sessions) {
+      delete this._data.sessions[windowId];
+      this._debouncedSave();
+    }
+  }
+
+  getAllWindowSessions() {
+    return this._data.sessions || {};
+  }
+
+  clearAllSessions() {
+    this._data.sessions = {};
     this._debouncedSave();
   }
 
@@ -94,7 +111,15 @@ class Store {
         const raw = fs.readFileSync(this._filePath, 'utf-8');
         const parsed = JSON.parse(raw);
         this._data.settings = { ...DEFAULT_SETTINGS, ...parsed.settings };
-        this._data.session = parsed.session || null;
+
+        // Migrate legacy single-session format to per-window sessions
+        if (parsed.sessions) {
+          this._data.sessions = parsed.sessions;
+        } else if (parsed.session) {
+          this._data.sessions = { '0': parsed.session };
+        } else {
+          this._data.sessions = {};
+        }
       }
     } catch (err) {
       console.error('Failed to load settings:', err);

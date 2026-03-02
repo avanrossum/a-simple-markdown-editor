@@ -8,87 +8,55 @@ import { searchKeymap } from '@codemirror/search';
 import { syntaxHighlighting, defaultHighlightStyle, HighlightStyle } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 
-// ── Dark Theme ──
+// ── Editor Theme Factory ──
+// Built dynamically so CodeMirror re-measures font metrics when settings change
 
-const darkTheme = EditorView.theme({
-  '&': {
-    backgroundColor: 'var(--bg-primary)',
-    color: 'var(--text-primary)',
-    fontSize: 'var(--editor-font-size)',
-    fontFamily: 'var(--editor-font-family)',
-    height: '100%',
-  },
-  '.cm-content': {
-    padding: '12px 16px',
-    caretColor: 'var(--accent)',
-    lineHeight: '1.6',
-  },
-  '.cm-cursor': {
-    borderLeftColor: 'var(--accent)',
-  },
-  '.cm-selectionBackground, &.cm-focused .cm-selectionBackground': {
-    backgroundColor: 'var(--accent-selection) !important',
-  },
-  '.cm-activeLine': {
-    backgroundColor: 'color-mix(in srgb, var(--bg-elevated) 60%, transparent)',
-  },
-  '.cm-gutters': {
-    backgroundColor: 'var(--bg-surface)',
-    color: 'var(--text-muted)',
-    border: 'none',
-    borderRight: '1px solid var(--border-color)',
-  },
-  '.cm-activeLineGutter': {
-    backgroundColor: 'var(--bg-elevated)',
-    color: 'var(--text-secondary)',
-  },
-  '.cm-scroller': {
-    overflow: 'auto',
-  },
-  '&.cm-focused': {
-    outline: 'none',
-  },
-}, { dark: true });
+const DEFAULT_MONO_FONT = "'SF Mono', 'Menlo', 'Monaco', Consolas, monospace";
 
-const lightTheme = EditorView.theme({
-  '&': {
-    backgroundColor: 'var(--bg-primary)',
-    color: 'var(--text-primary)',
-    fontSize: 'var(--editor-font-size)',
-    fontFamily: 'var(--editor-font-family)',
-    height: '100%',
-  },
-  '.cm-content': {
-    padding: '12px 16px',
-    caretColor: 'var(--accent)',
-    lineHeight: '1.6',
-  },
-  '.cm-cursor': {
-    borderLeftColor: 'var(--accent)',
-  },
-  '.cm-selectionBackground, &.cm-focused .cm-selectionBackground': {
-    backgroundColor: 'var(--accent-selection) !important',
-  },
-  '.cm-activeLine': {
-    backgroundColor: 'color-mix(in srgb, var(--bg-elevated) 60%, transparent)',
-  },
-  '.cm-gutters': {
-    backgroundColor: 'var(--bg-surface)',
-    color: 'var(--text-muted)',
-    border: 'none',
-    borderRight: '1px solid var(--border-color)',
-  },
-  '.cm-activeLineGutter': {
-    backgroundColor: 'var(--bg-elevated)',
-    color: 'var(--text-secondary)',
-  },
-  '.cm-scroller': {
-    overflow: 'auto',
-  },
-  '&.cm-focused': {
-    outline: 'none',
-  },
-}, { dark: false });
+function buildEditorTheme(isDark, fontSize, fontFamily) {
+  const resolvedFont = fontFamily && fontFamily !== 'default' ? fontFamily : DEFAULT_MONO_FONT;
+  const resolvedSize = `${fontSize || 14}px`;
+
+  return EditorView.theme({
+    '&': {
+      backgroundColor: 'var(--bg-primary)',
+      color: 'var(--text-primary)',
+      fontSize: resolvedSize,
+      fontFamily: resolvedFont,
+      height: '100%',
+    },
+    '.cm-content': {
+      padding: '12px 16px',
+      caretColor: 'var(--accent)',
+      lineHeight: '1.6',
+    },
+    '.cm-cursor': {
+      borderLeftColor: 'var(--accent)',
+    },
+    '.cm-selectionBackground, &.cm-focused .cm-selectionBackground': {
+      backgroundColor: 'var(--accent-selection) !important',
+    },
+    '.cm-activeLine': {
+      backgroundColor: 'color-mix(in srgb, var(--bg-elevated) 60%, transparent)',
+    },
+    '.cm-gutters': {
+      backgroundColor: 'var(--bg-surface)',
+      color: 'var(--text-muted)',
+      border: 'none',
+      borderRight: '1px solid var(--border-color)',
+    },
+    '.cm-activeLineGutter': {
+      backgroundColor: 'var(--bg-elevated)',
+      color: 'var(--text-secondary)',
+    },
+    '.cm-scroller': {
+      overflow: 'auto',
+    },
+    '&.cm-focused': {
+      outline: 'none',
+    },
+  }, { dark: isDark });
+}
 
 // ── Markdown Highlight Style ──
 
@@ -154,7 +122,7 @@ const Editor = forwardRef(function Editor({ content, onChange, settings, theme }
       keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
       updateListener,
       EditorView.lineWrapping,
-      theme === 'dark' ? darkTheme : lightTheme,
+      buildEditorTheme(theme === 'dark', settings?.fontSize, settings?.fontFamily),
     ];
 
     if (settings?.showLineNumbers) {
@@ -177,9 +145,9 @@ const Editor = forwardRef(function Editor({ content, onChange, settings, theme }
       view.destroy();
       viewRef.current = null;
     };
-    // Only recreate on theme or settings changes that require full rebuild
+    // Recreate on theme, font, or settings changes that require full rebuild
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme, settings?.showLineNumbers]);
+  }, [theme, settings?.showLineNumbers, settings?.fontFamily, settings?.fontSize]);
 
   // ── Sync Content from External Changes ──
 

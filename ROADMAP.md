@@ -14,6 +14,8 @@
 - [x] Window bounds save/restore
 - [x] Multi-window support (Cmd+Shift+N)
 - [x] Cmd+W closes tab (not window)
+- [x] New window (Cmd+Shift+N) opens fresh (empty Untitled tab, no restored state)
+- [x] Multi-window session restore (all open windows preserved and restored on quit/relaunch)
 
 ### Editor
 
@@ -48,6 +50,9 @@
 - [x] File browser: right-click context menu (new markdown file, new folder, rename)
 - [x] File browser: inline rename for files and folders
 - [x] Session restore (persist open tabs, active tab, folder path across restarts)
+- [x] File browser: delete file (move to trash) via context menu
+- [x] File browser: "Show in Finder" context menu option
+- [ ] File browser: delete folder (move to trash) via context menu
 
 ### Preview
 
@@ -62,6 +67,7 @@
 - [x] Accent color picker (7 colors)
 - [x] Font size selector (applies to editor)
 - [x] Editor font family selector (system monospace fonts)
+- [x] Fix: editor font family setting not applying to CodeMirror
 - [x] Preview font family selector (system fonts)
 - [x] Theme selector: segmented control (Dark / Light / System)
 - [x] Toggle: word wrap, line numbers, spell check

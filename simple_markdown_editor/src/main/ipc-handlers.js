@@ -150,6 +150,20 @@ function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
     }
   });
 
+  ipcMain.handle('file:trash', async (_, filePath) => {
+    try {
+      await shell.trashItem(filePath);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('file:show-in-folder', async (_, filePath) => {
+    shell.showItemInFolder(filePath);
+    return { success: true };
+  });
+
   // ── File Watching ──
 
   ipcMain.handle('watch:file', async (_, filePath) => {
@@ -205,14 +219,14 @@ function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
     return { success: true };
   });
 
-  // ── Session ──
+  // ── Session (per-window) ──
 
-  ipcMain.handle('session:get', async () => {
-    return store.getSession();
+  ipcMain.handle('session:get', async (_, windowId) => {
+    return store.getWindowSession(windowId);
   });
 
-  ipcMain.handle('session:set', async (_, sessionData) => {
-    store.setSession(sessionData);
+  ipcMain.handle('session:set', async (_, windowId, sessionData) => {
+    store.setWindowSession(windowId, sessionData);
     return { success: true };
   });
 

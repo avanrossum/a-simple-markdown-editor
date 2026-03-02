@@ -10,6 +10,11 @@ import Settings from '../settings/Settings';
 
 const { electronAPI } = window;
 
+// ── Window Identity (from URL query params) ──
+const urlParams = new URLSearchParams(window.location.search);
+const WINDOW_ID = urlParams.get('windowId') || '0';
+const IS_FRESH_WINDOW = urlParams.get('fresh') === 'true';
+
 // ── Tab Helpers ──
 
 let tabIdCounter = 1;
@@ -59,10 +64,18 @@ export default function App() {
   // ── Session Restore ──
 
   useEffect(() => {
+    // Fresh windows (Cmd+Shift+N) skip session restore
+    if (IS_FRESH_WINDOW) {
+      setTabs([createTab()]);
+      setActiveTabId(1);
+      sessionRestoredRef.current = true;
+      return;
+    }
+
     let cancelled = false;
 
     (async () => {
-      const session = await electronAPI.getSession();
+      const session = await electronAPI.getSession(WINDOW_ID);
       if (cancelled) return;
 
       let restoredTabs = [];
@@ -112,7 +125,7 @@ export default function App() {
     const timer = setTimeout(() => {
       const openFiles = tabs.filter((t) => t.filePath).map((t) => t.filePath);
       const activeFile = tabs.find((t) => t.id === activeTabId)?.filePath || null;
-      electronAPI.setSession({
+      electronAPI.setSession(WINDOW_ID, {
         openFiles,
         activeFile,
         folderPath: folderPath || null,
@@ -327,6 +340,28 @@ export default function App() {
     );
   }, []);
 
+  // ── File Deleted Handler ──
+
+  const handleFileDeleted = useCallback((filePath) => {
+    electronAPI.unwatchFile(filePath);
+    setTabs((prev) => {
+      const next = prev.filter((t) => t.filePath !== filePath);
+      if (next.length === 0) {
+        const fresh = createTab();
+        setActiveTabId(fresh.id);
+        return [fresh];
+      }
+      // If active tab was the deleted file, switch to adjacent
+      const wasActive = prev.find((t) => t.id === activeTabId);
+      if (wasActive?.filePath === filePath) {
+        const idx = prev.findIndex((t) => t.filePath === filePath);
+        const newIdx = Math.min(idx, next.length - 1);
+        setActiveTabId(next[newIdx].id);
+      }
+      return next;
+    });
+  }, [activeTabId]);
+
   // ── Content Updates ──
 
   const updateContent = useCallback((tabId, content) => {
@@ -483,6 +518,7 @@ export default function App() {
           width={settings.fileBrowserWidth}
           activeFilePath={activeTab?.filePath}
           onFileRenamed={handleFileRenamed}
+          onFileDeleted={handleFileDeleted}
         />
 
         {/* Editor Column */}

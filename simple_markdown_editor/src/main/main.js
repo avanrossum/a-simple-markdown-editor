@@ -16,6 +16,8 @@ const windows = new Set();
 const store = new Store();
 const fileWatcher = new FileWatcher();
 const isDev = process.argv.includes('--dev');
+let windowIdCounter = 0;
+let isQuitting = false;
 
 // ── Window Creation ──
 
@@ -27,7 +29,9 @@ function getBackgroundColor() {
   return THEME_BG_COLORS[theme] || THEME_BG_COLORS.dark;
 }
 
-function createWindow() {
+function createWindow(options = {}) {
+  const { fresh = false, windowId } = options;
+  const id = windowId || String(windowIdCounter++);
   const savedBounds = store.getWindowBounds();
 
   // Offset new windows so they don't stack exactly on top
@@ -52,12 +56,19 @@ function createWindow() {
     },
   });
 
+  // Tag window with its session ID
+  win._windowId = id;
   windows.add(win);
 
+  // Build URL with window ID and fresh flag
+  const query = `windowId=${id}${fresh ? '&fresh=true' : ''}`;
+
   if (isDev) {
-    win.loadURL('http://localhost:5173');
+    win.loadURL(`http://localhost:5173?${query}`);
   } else {
-    win.loadFile(path.join(__dirname, '../../dist-renderer/main/index.html'));
+    win.loadFile(path.join(__dirname, '../../dist-renderer/main/index.html'), {
+      query: fresh ? { windowId: id, fresh: 'true' } : { windowId: id },
+    });
   }
 
   win.once('ready-to-show', () => {
@@ -80,6 +91,11 @@ function createWindow() {
 
   win.on('closed', () => {
     windows.delete(win);
+    // Remove session for this window unless the app is quitting
+    // (on quit we preserve all sessions for next launch)
+    if (!isQuitting) {
+      store.removeWindowSession(id);
+    }
   });
 
   // Security: prevent navigation and new windows
@@ -120,7 +136,7 @@ function handleMenuNewFile() {
 }
 
 function handleMenuNewWindow() {
-  createWindow();
+  createWindow({ fresh: true });
 }
 
 function handleMenuOpenFolder(dirPath) {
@@ -149,7 +165,19 @@ app.whenReady().then(() => {
     return net.fetch(`file://${filePath}`);
   });
 
-  createWindow();
+  // Restore windows from saved sessions, or create a fresh default window
+  const sessions = store.getAllWindowSessions();
+  const sessionEntries = Object.entries(sessions);
+
+  if (sessionEntries.length > 0) {
+    for (const [id] of sessionEntries) {
+      createWindow({ windowId: id });
+    }
+    // Set counter past existing IDs to avoid collisions
+    windowIdCounter = Math.max(windowIdCounter, ...sessionEntries.map(([id]) => (parseInt(id, 10) || 0) + 1));
+  } else {
+    createWindow();
+  }
 
   registerIpcHandlers({
     store,
@@ -177,7 +205,7 @@ app.whenReady().then(() => {
       handleMenuOpen(filePath);
     } else {
       // No windows open — create one then open the file
-      const win = createWindow();
+      const win = createWindow({ fresh: true });
       win.webContents.once('did-finish-load', () => {
         win.webContents.send('open-file', filePath);
         store.addRecentFile(filePath);
@@ -199,5 +227,6 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
+  isQuitting = true;
   fileWatcher.destroy();
 });

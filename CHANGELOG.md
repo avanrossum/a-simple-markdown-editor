@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-03-01
+
+### Added
+
+- File browser: "Move to Trash" context menu option for files
+- File browser: "Show in Finder" context menu option for files and folders
+- Multi-window session restore: each window's tabs and folder are preserved on quit and restored on relaunch
+
+### Fixed
+
+- Editor font family setting not applying (CodeMirror now rebuilds with literal font values instead of CSS variables)
+- New window (Cmd+Shift+N) now opens fresh with an empty Untitled tab instead of cloning the current window's state
+
 ## [0.1.6] - 2026-03-01
 
 ### Fixed

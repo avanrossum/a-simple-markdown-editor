@@ -254,7 +254,7 @@ function truncatePath(fullPath, homeDir) {
 
 // ── Main Component ──
 
-export default function FileBrowser({ folderPath, onOpenFile, onSetFolder, onOpenSettings, width, activeFilePath, onFileRenamed }) {
+export default function FileBrowser({ folderPath, onOpenFile, onSetFolder, onOpenSettings, width, activeFilePath, onFileRenamed, onFileDeleted }) {
   const [entries, setEntries] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const [homeDir, setHomeDir] = useState(null);
@@ -341,6 +341,15 @@ export default function FileBrowser({ folderPath, onOpenFile, onSetFolder, onOpe
     setTimeout(() => setRenamingPath(newPath), 100);
   }, [folderPath, loadDirectory]);
 
+  const trashFile = useCallback(async (filePath) => {
+    const result = await electronAPI.trashFile(filePath);
+    if (result.success) {
+      loadDirectory(folderPath);
+      setRefreshKey((k) => k + 1);
+      if (onFileDeleted) onFileDeleted(filePath);
+    }
+  }, [folderPath, loadDirectory, onFileDeleted]);
+
   const handleContextMenu = useCallback((e, entry) => {
     const items = [];
 
@@ -361,8 +370,21 @@ export default function FileBrowser({ folderPath, onOpenFile, onSetFolder, onOpe
       action: () => setRenamingPath(entry.path),
     });
 
+    if (!entry.isDirectory) {
+      items.push({
+        label: 'Move to Trash',
+        action: () => trashFile(entry.path),
+      });
+    }
+
+    items.push({ separator: true });
+    items.push({
+      label: 'Show in Finder',
+      action: () => electronAPI.showInFolder(entry.path),
+    });
+
     setContextMenu({ x: e.clientX, y: e.clientY, items });
-  }, [createNewFile, createNewFolder]);
+  }, [createNewFile, createNewFolder, trashFile]);
 
   const handleTreeContextMenu = useCallback((e) => {
     if (e.target.closest('.file-tree-row')) return;
