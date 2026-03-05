@@ -36,6 +36,36 @@ function createAnnotatedRenderer() {
         const title = token.title ? ` title="${token.title}"` : '';
         return `<img src="${src}" alt="${alt}"${title} />`;
       },
+      link(token) {
+        const href = token.href || '';
+        const text = this.parser.parseInline(token.tokens);
+        const title = token.title ? ` title="${token.title}"` : '';
+
+        // Anchor links — render normally
+        if (href.startsWith('#')) {
+          return `<a href="${href}"${title}>${text}</a>`;
+        }
+
+        // External links — render with data-external
+        if (href.startsWith('http://') || href.startsWith('https://')) {
+          return `<a href="${href}"${title} data-external="true">${text}</a>`;
+        }
+
+        // Local markdown links — resolve path, store in data attribute
+        const mdExtensions = ['.md', '.markdown', '.mdown', '.mkd', '.mkdn', '.mdwn', '.mdx'];
+        const lowerHref = href.toLowerCase();
+        const isMarkdown = mdExtensions.some(ext => lowerHref.endsWith(ext));
+
+        if (isMarkdown && currentBaseDir) {
+          const resolved = href.startsWith('/')
+            ? href
+            : resolveRelativePath(currentBaseDir, href);
+          return `<a href="#" data-local-path="${resolved}"${title}>${text}</a>`;
+        }
+
+        // Non-markdown local files — render as plain text (no link behavior)
+        return `<span class="preview-link-disabled"${title}>${text}</span>`;
+      },
       heading(token) {
         const text = this.parser.parseInline(token.tokens);
         const attr = token._sourceLine != null ? ` data-source-line="${token._sourceLine}"` : '';
@@ -133,11 +163,31 @@ const SYNC_COOLDOWN_MS = 80;
 
 // ── Preview Component ──
 
-export default function Preview({ content, theme, editorRef, filePath }) {
+export default function Preview({ content, theme, editorRef, filePath, onOpenFile }) {
   const previewRef = useRef(null);
   const scrollSourceRef = useRef(null); // 'editor' | 'preview' | null
   const cooldownTimerRef = useRef(null);
   const cachedAnchorsRef = useRef([]);
+
+  // ── Link Click Handler ──
+
+  const handleClick = useCallback((e) => {
+    const link = e.target.closest('a[data-local-path], a[data-external]');
+    if (!link) return;
+
+    e.preventDefault();
+
+    const localPath = link.getAttribute('data-local-path');
+    if (localPath) {
+      onOpenFile?.(localPath);
+      return;
+    }
+
+    const href = link.getAttribute('href');
+    if (href && link.hasAttribute('data-external')) {
+      window.electronAPI.openExternal(href);
+    }
+  }, [onOpenFile]);
 
   // Derive base directory from file path
   const baseDir = useMemo(() => {
@@ -153,7 +203,7 @@ export default function Preview({ content, theme, editorRef, filePath }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       const raw = annotatedMd.parse(content, baseDir);
-      setHtml(DOMPurify.sanitize(raw, { ADD_ATTR: ['data-source-line'], ALLOWED_URI_REGEXP: /^(?:https?|data|local-resource):/i }));
+      setHtml(DOMPurify.sanitize(raw, { ADD_ATTR: ['data-source-line', 'data-local-path', 'data-external'], ALLOWED_URI_REGEXP: /^(?:https?|data|local-resource):/i }));
     }, 150);
     return () => clearTimeout(timer);
   }, [content, baseDir]);
@@ -302,6 +352,7 @@ export default function Preview({ content, theme, editorRef, filePath }) {
     <div
       ref={previewRef}
       className="preview-container"
+      onClick={handleClick}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );

@@ -120,6 +120,21 @@
   text-decoration: underline;
 }
 
+.preview-container a[data-local-path] {
+  cursor: pointer;
+}
+
+.preview-container a[data-external]::after {
+  content: ' ↗';
+  font-size: 0.75em;
+  opacity: 0.5;
+  vertical-align: super;
+}
+
+.preview-container .preview-link-disabled {
+  color: var(--text-secondary);
+}
+
 .preview-container strong {
   font-weight: 600;
 }

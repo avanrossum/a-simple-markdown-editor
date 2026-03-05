@@ -734,6 +734,7 @@ export default function App() {
             theme={theme}
             editorRef={editorRef}
             filePath={activeTab.filePath}
+            onOpenFile={openFile}
           />
         </div>
       </div>

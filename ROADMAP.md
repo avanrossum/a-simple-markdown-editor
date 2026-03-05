@@ -188,15 +188,16 @@
 - [x] Tab scroll/cursor position: save and restore per-tab scroll offset and cursor when switching tabs
 - [x] File browser refresh: increase watcher depth from 1 to 5 for nested subdirectories
 - [x] File browser refresh: reload tree on window focus to catch changes missed by FS events
+- [ ] Per-document undo history: Cmd+Z currently shares undo state across all tabs — each tab should have its own independent undo/redo stack
 
 ### Clickable Links
 
 - [ ] File browser: delete folder (move to trash) via context menu
-- [ ] Preview pane: clickable links to local .md files open in new tab
-- [ ] Link resolution: handle relative paths
-- [ ] Link resolution: handle directory traversal (`../`, `./`)
-- [ ] Link resolution: handle paths relative to open folder root
-- [ ] Visual distinction for local vs external links in preview
+- [x] Preview pane: clickable links to local .md files open in new tab
+- [x] Link resolution: handle relative paths
+- [x] Link resolution: handle directory traversal (`../`, `./`)
+- [x] Link resolution: handle paths relative to open folder root
+- [x] Visual distinction for local vs external links in preview
 
 ---
 
