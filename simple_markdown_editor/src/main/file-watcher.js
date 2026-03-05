@@ -59,7 +59,7 @@ class FileWatcher {
     this._dirWatcher = chokidar.watch(dirPath, {
       persistent: true,
       ignoreInitial: true,
-      depth: 5,
+      depth: 2,
       ignored: [
         /(^|[/\\])\../, // dotfiles
         '**/node_modules/**',
@@ -76,6 +76,7 @@ class FileWatcher {
         /^\/sys(\/|$)/,
       ],
       usePolling: false,
+      ignorePermissionErrors: true,
     });
 
     const debouncedCallback = () => {
@@ -87,8 +88,8 @@ class FileWatcher {
     this._dirWatcher.on('addDir', debouncedCallback);
     this._dirWatcher.on('unlinkDir', debouncedCallback);
     this._dirWatcher.on('error', (err) => {
-      // Silently ignore permission/access errors (e.g. system directories)
-      if (err.code === 'EACCES' || err.code === 'EAGAIN') return;
+      // Silently ignore permission/access and resource limit errors
+      if (err.code === 'EACCES' || err.code === 'EAGAIN' || err.code === 'EMFILE' || err.code === 'ENFILE') return;
       console.error('Directory watcher error:', err.message);
     });
   }

@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-03-05
+
 ### Added
 
 - Clickable links in preview: local `.md` file links open in a new editor tab, external links open in default browser
 - Link resolution: handles relative paths (`./`), directory traversal (`../`), and absolute paths
 - Visual distinction for external links (↗ indicator)
+
+### Fixed
+
+- App hangs on launch: directory watcher with depth 5 exhausted file descriptors (EMFILE) on large folder trees — reduced depth to 2 and added resource limit error handling
 
 ## [0.2.1] - 2026-03-05
 
