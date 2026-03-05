@@ -430,6 +430,18 @@ export default function FileBrowser({ folderPath, onOpenFile, onSetFolder, onOpe
     return unsub;
   }, [folderPath, loadDirectory]);
 
+  // Refresh file tree when window regains focus (catches changes missed by watcher)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (folderPath) {
+        loadDirectory(folderPath);
+        setRefreshKey((k) => k + 1);
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [folderPath, loadDirectory]);
+
   const handleOpenFolder = useCallback(async () => {
     const result = await electronAPI.showOpenDialog({ directory: true });
     if (!result.canceled && result.filePaths[0]) {

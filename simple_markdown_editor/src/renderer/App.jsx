@@ -50,8 +50,30 @@ export default function App() {
   const dragTypeRef = useRef(null);
   const fileBrowserWidthRef = useRef(fileBrowserWidth);
   const editorSplitRef = useRef(editorSplit);
+  const tabViewStatesRef = useRef(new Map()); // Map<tabId, {scrollTop, cursorFrom, cursorTo}>
 
   const activeTab = tabs?.find((t) => t.id === activeTabId) || tabs?.[0];
+
+  // ── Tab View State (scroll + cursor) ──
+
+  const saveCurrentTabViewState = useCallback(() => {
+    if (activeTabId && editorRef.current) {
+      const scrollInfo = editorRef.current.getScrollInfo();
+      const view = editorRef.current.getView();
+      const cursor = view ? view.state.selection.main : null;
+      tabViewStatesRef.current.set(activeTabId, {
+        scrollTop: scrollInfo.scrollTop,
+        cursorFrom: cursor ? cursor.from : 0,
+        cursorTo: cursor ? cursor.to : 0,
+      });
+    }
+  }, [activeTabId]);
+
+  const switchTab = useCallback((newTabId) => {
+    if (newTabId === activeTabId) return;
+    saveCurrentTabViewState();
+    setActiveTabId(newTabId);
+  }, [activeTabId, saveCurrentTabViewState]);
 
   // ── Load Settings ──
 
@@ -149,6 +171,34 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [tabs, activeTabId, folderPath]);
 
+  // ── Restore Tab View State ──
+
+  useEffect(() => {
+    if (!activeTabId || !editorRef.current) return;
+
+    const frame = requestAnimationFrame(() => {
+      const saved = tabViewStatesRef.current.get(activeTabId);
+      if (saved && editorRef.current) {
+        const view = editorRef.current.getView();
+        if (view) {
+          const docLength = view.state.doc.length;
+          const safeFrom = Math.min(saved.cursorFrom, docLength);
+          const safeTo = Math.min(saved.cursorTo, docLength);
+          view.dispatch({
+            selection: { anchor: safeFrom, head: safeTo },
+            scrollIntoView: false,
+          });
+        }
+        editorRef.current.scrollToPixel(saved.scrollTop);
+      } else {
+        // No saved state (new tab) — scroll to top
+        editorRef.current.scrollToPixel(0);
+      }
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [activeTabId]);
+
   // ── Theme ──
 
   const applyTheme = useCallback(async (themeSetting) => {
@@ -201,7 +251,7 @@ export default function App() {
     // Check if already open
     const existing = tabs?.find((t) => t.filePath === filePath);
     if (existing) {
-      setActiveTabId(existing.id);
+      switchTab(existing.id);
       return;
     }
 
@@ -213,11 +263,12 @@ export default function App() {
     tab.savedContent = result.content;
     tab.lastKnownMtime = stat.success ? stat.mtime : null;
 
+    saveCurrentTabViewState();
     setTabs((prev) => [...prev, tab]);
     setActiveTabId(tab.id);
     electronAPI.addRecentFile(filePath);
     electronAPI.watchFile(filePath);
-  }, [tabs]);
+  }, [tabs, saveCurrentTabViewState]);
 
   const saveTab = useCallback(async (tabId) => {
     const tab = tabs?.find((t) => t.id === (tabId || activeTabId));
@@ -280,10 +331,11 @@ export default function App() {
   }, [tabs, activeTabId]);
 
   const newFile = useCallback(() => {
+    saveCurrentTabViewState();
     const tab = createTab();
     setTabs((prev) => [...prev, tab]);
     setActiveTabId(tab.id);
-  }, []);
+  }, [saveCurrentTabViewState]);
 
   const closeTab = useCallback(async (tabId) => {
     const tab = tabs?.find((t) => t.id === tabId);
@@ -315,6 +367,9 @@ export default function App() {
       electronAPI.unwatchFile(tab.filePath);
     }
 
+    // Clean up view state for closed tab
+    tabViewStatesRef.current.delete(tabId);
+
     setTabs((prev) => {
       const next = prev.filter((t) => t.id !== tabId);
       if (next.length === 0) {
@@ -333,11 +388,12 @@ export default function App() {
 
   const duplicateFile = useCallback(async () => {
     if (!activeTab) return;
+    saveCurrentTabViewState();
     const tab = createTab(null, activeTab.content);
     tab.name = `${getTabName(activeTab)} copy`;
     setTabs((prev) => [...prev, tab]);
     setActiveTabId(tab.id);
-  }, [activeTab]);
+  }, [activeTab, saveCurrentTabViewState]);
 
   // ── Close Window (with dirty checks) ──
 
@@ -620,7 +676,7 @@ export default function App() {
             dirty: isTabDirty(t),
           }))}
           activeTabId={activeTabId}
-          onSelectTab={setActiveTabId}
+          onSelectTab={switchTab}
           onCloseTab={closeTab}
           onNewTab={newFile}
         />

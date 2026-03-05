@@ -59,7 +59,7 @@ class FileWatcher {
     this._dirWatcher = chokidar.watch(dirPath, {
       persistent: true,
       ignoreInitial: true,
-      depth: 1,
+      depth: 5,
       ignored: [
         /(^|[/\\])\../, // dotfiles
         '**/node_modules/**',

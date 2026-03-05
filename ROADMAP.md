@@ -171,17 +171,23 @@
 
 ### Keyboard Shortcuts
 
-- [ ] Bold (Cmd+B)
-- [ ] Italic (Cmd+I)
-- [ ] Strikethrough (Cmd+Shift+X)
-- [ ] Inline code (Cmd+E)
-- [ ] Code block (Cmd+Shift+C)
-- [ ] Heading cycle (Cmd+Shift+H or similar)
-- [ ] Bullet list (Cmd+Shift+L)
-- [ ] Numbered list (Cmd+Shift+O)
-- [ ] Link (Cmd+K)
-- [ ] Horizontal rule (Cmd+Shift+-)
-- [ ] Blockquote (Cmd+Shift+.)
+- [x] Bold (Cmd+B)
+- [x] Italic (Cmd+I)
+- [x] Strikethrough (Cmd+Shift+X)
+- [x] Inline code (Cmd+E)
+- [x] Code block (Cmd+Shift+C)
+- [x] Heading cycle (Cmd+Shift+H) — cycles none → H1 → H2 → H3 → none
+- [x] Bullet list (Cmd+Shift+L)
+- [x] Numbered list (Cmd+Shift+O)
+- [x] Link (Cmd+K)
+- [x] Horizontal rule (Cmd+Shift+-)
+- [x] Blockquote (Cmd+Shift+.)
+
+### Bug Fixes
+
+- [x] Tab scroll/cursor position: save and restore per-tab scroll offset and cursor when switching tabs
+- [x] File browser refresh: increase watcher depth from 1 to 5 for nested subdirectories
+- [x] File browser refresh: reload tree on window focus to catch changes missed by FS events
 
 ### Clickable Links
 

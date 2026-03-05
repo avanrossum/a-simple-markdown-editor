@@ -101,6 +101,7 @@ const Editor = forwardRef(function Editor({ content, onChange, settings, theme }
   const viewRef = useRef(null);
   const onChangeRef = useRef(onChange);
   const isExternalUpdate = useRef(false);
+  const applyFormattingRef = useRef(null);
 
   onChangeRef.current = onChange;
 
@@ -115,7 +116,34 @@ const Editor = forwardRef(function Editor({ content, onChange, settings, theme }
       }
     });
 
+    // ── Formatting Keyboard Shortcuts ──
+    const formattingKeymap = keymap.of([
+      { key: 'Mod-b', run: () => { applyFormattingRef.current?.('bold'); return true; } },
+      { key: 'Mod-i', run: () => { applyFormattingRef.current?.('italic'); return true; } },
+      { key: 'Mod-Shift-x', run: () => { applyFormattingRef.current?.('strikethrough'); return true; } },
+      { key: 'Mod-e', run: () => { applyFormattingRef.current?.('code'); return true; } },
+      { key: 'Mod-Shift-c', run: () => { applyFormattingRef.current?.('codeblock'); return true; } },
+      { key: 'Mod-Shift-h', run: () => {
+        // Cycle headings: none → H1 → H2 → H3 → none
+        const view = viewRef.current;
+        if (!view) return true;
+        const { from } = view.state.selection.main;
+        const line = view.state.doc.lineAt(from);
+        const match = line.text.match(/^(#{1,6})\s/);
+        const level = match ? match[1].length : 0;
+        const nextAction = level === 0 ? 'h1' : level === 1 ? 'h2' : 'h3';
+        applyFormattingRef.current?.(nextAction);
+        return true;
+      }},
+      { key: 'Mod-Shift-l', run: () => { applyFormattingRef.current?.('ul'); return true; } },
+      { key: 'Mod-Shift-o', run: () => { applyFormattingRef.current?.('ol'); return true; } },
+      { key: 'Mod-k', run: () => { applyFormattingRef.current?.('link'); return true; } },
+      { key: 'Mod-Shift--', run: () => { applyFormattingRef.current?.('hr'); return true; } },
+      { key: 'Mod-Shift-.', run: () => { applyFormattingRef.current?.('quote'); return true; } },
+    ]);
+
     const extensions = [
+      formattingKeymap,
       history(),
       drawSelection(),
       highlightActiveLine(),
@@ -170,8 +198,8 @@ const Editor = forwardRef(function Editor({ content, onChange, settings, theme }
 
   // ── Expose Formatting API ──
 
-  useImperativeHandle(ref, () => ({
-    applyFormatting(action) {
+  useImperativeHandle(ref, () => {
+    function applyFormatting(action) {
       const view = viewRef.current;
       if (!view) return;
 
@@ -396,60 +424,67 @@ const Editor = forwardRef(function Editor({ content, onChange, settings, theme }
         view.focus();
         return;
       }
-    },
+    }
 
-    getView() {
-      return viewRef.current;
-    },
+    // Make formatting available to keyboard shortcuts via ref
+    applyFormattingRef.current = applyFormatting;
 
-    getScrollInfo() {
-      const view = viewRef.current;
-      if (!view) return { scrollTop: 0, scrollHeight: 1, clientHeight: 1 };
-      const scroller = view.scrollDOM;
-      return {
-        scrollTop: scroller.scrollTop,
-        scrollHeight: scroller.scrollHeight,
-        clientHeight: scroller.clientHeight,
-      };
-    },
+    return {
+      applyFormatting,
 
-    getTopVisibleLine() {
-      const view = viewRef.current;
-      if (!view) return 0;
-      const top = view.scrollDOM.scrollTop;
-      const block = view.lineBlockAtHeight(top);
-      return view.state.doc.lineAt(block.from).number;
-    },
+      getView() {
+        return viewRef.current;
+      },
 
-    getLineTop(lineNum) {
-      const view = viewRef.current;
-      if (!view) return 0;
-      const lineCount = view.state.doc.lines;
-      const clampedLine = Math.max(1, Math.min(lineNum, lineCount));
-      const pos = view.state.doc.line(clampedLine).from;
-      const block = view.lineBlockAt(pos);
-      return block.top;
-    },
+      getScrollInfo() {
+        const view = viewRef.current;
+        if (!view) return { scrollTop: 0, scrollHeight: 1, clientHeight: 1 };
+        const scroller = view.scrollDOM;
+        return {
+          scrollTop: scroller.scrollTop,
+          scrollHeight: scroller.scrollHeight,
+          clientHeight: scroller.clientHeight,
+        };
+      },
 
-    scrollToPixel(px) {
-      const view = viewRef.current;
-      if (!view) return;
-      view.scrollDOM.scrollTop = px;
-    },
+      getTopVisibleLine() {
+        const view = viewRef.current;
+        if (!view) return 0;
+        const top = view.scrollDOM.scrollTop;
+        const block = view.lineBlockAtHeight(top);
+        return view.state.doc.lineAt(block.from).number;
+      },
 
-    getScrollDOM() {
-      const view = viewRef.current;
-      return view ? view.scrollDOM : null;
-    },
+      getLineTop(lineNum) {
+        const view = viewRef.current;
+        if (!view) return 0;
+        const lineCount = view.state.doc.lines;
+        const clampedLine = Math.max(1, Math.min(lineNum, lineCount));
+        const pos = view.state.doc.line(clampedLine).from;
+        const block = view.lineBlockAt(pos);
+        return block.top;
+      },
 
-    onScroll(callback) {
-      const view = viewRef.current;
-      if (!view) return () => {};
-      const handler = () => callback();
-      view.scrollDOM.addEventListener('scroll', handler, { passive: true });
-      return () => view.scrollDOM.removeEventListener('scroll', handler);
-    },
-  }), []);
+      scrollToPixel(px) {
+        const view = viewRef.current;
+        if (!view) return;
+        view.scrollDOM.scrollTop = px;
+      },
+
+      getScrollDOM() {
+        const view = viewRef.current;
+        return view ? view.scrollDOM : null;
+      },
+
+      onScroll(callback) {
+        const view = viewRef.current;
+        if (!view) return () => {};
+        const handler = () => callback();
+        view.scrollDOM.addEventListener('scroll', handler, { passive: true });
+        return () => view.scrollDOM.removeEventListener('scroll', handler);
+      },
+    };
+  }, []);
 
   return <div ref={containerRef} className="editor-container" />;
 });
