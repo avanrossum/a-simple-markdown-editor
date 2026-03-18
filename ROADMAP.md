@@ -208,7 +208,7 @@
 - [ ] Link button: dialog to enter URL
 - [ ] Image button: dialog with "Insert from file" and "Insert URL" options
 - [ ] Editor: bracket/quote auto-pairing
-- [ ] Auto-save option (with configurable delay)
+- [x] Auto-save option (with configurable delay)
 - [ ] File browser: drag to resize width
 - [x] Export to HTML / PDF
 - [ ] Performance: large markdown files crash or freeze the app (editor + preview rendering)

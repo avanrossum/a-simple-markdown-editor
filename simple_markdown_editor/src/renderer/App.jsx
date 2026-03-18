@@ -568,6 +568,19 @@ export default function App() {
     setDiffData(null);
   }, [diffData]);
 
+  // ── Auto-Save ──
+
+  useEffect(() => {
+    if (!settings?.autoSave || !activeTab?.filePath) return;
+    if (activeTab.content === activeTab.savedContent) return;
+
+    const timer = setTimeout(() => {
+      saveTab(activeTab.id);
+    }, settings.autoSaveDelay || 5000);
+
+    return () => clearTimeout(timer);
+  }, [settings?.autoSave, settings?.autoSaveDelay, activeTab?.id, activeTab?.content, activeTab?.savedContent, activeTab?.filePath, saveTab]);
+
   // ── Menu Events ──
 
   useEffect(() => {

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-03-17
+
+### Added
+
+- Auto-save: toggle in Settings with configurable delay (1s, 2s, 5s, 10s). Saves dirty files automatically after the chosen delay. Off by default.
+
 ## [0.3.2] - 2026-03-17
 
 ### Added

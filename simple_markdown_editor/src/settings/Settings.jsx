@@ -130,6 +130,38 @@ export default function Settings({ settings: initialSettings, onClose }) {
 
         </div>
 
+        {/* ── Saving ── */}
+        <div className="settings-section">
+          <div className="settings-section-title">Saving</div>
+
+          <div className="settings-row">
+            <label>Auto-save</label>
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={settings.autoSave || false}
+                onChange={(e) => updateSetting('autoSave', e.target.checked)}
+              />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+
+          {settings.autoSave && (
+            <div className="settings-row">
+              <label>Save delay</label>
+              <select
+                value={settings.autoSaveDelay || 5000}
+                onChange={(e) => updateSetting('autoSaveDelay', Number(e.target.value))}
+              >
+                <option value={1000}>1 second</option>
+                <option value={2000}>2 seconds</option>
+                <option value={5000}>5 seconds</option>
+                <option value={10000}>10 seconds</option>
+              </select>
+            </div>
+          )}
+        </div>
+
         {/* ── About ── */}
         <div className="settings-section">
           <div className="settings-section-title">About</div>
