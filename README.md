@@ -33,9 +33,9 @@ Signed and notarized with Apple — no Gatekeeper warnings. macOS 12+ required. 
 </tr>
 <tr>
 <td width="50%">
-<strong>External change detection</strong><br>
-<sub>Full diff view with resolution options when a file changes on disk</sub><br><br>
-<img src="screenshot-diff.png" alt="Diff view" width="100%">
+<strong>Interactive diff view</strong><br>
+<sub>Per-hunk accept/reject when resolving conflicts with external changes</sub><br><br>
+<img src="screenshot-diff2.png" alt="Interactive diff view" width="100%">
 </td>
 <td width="50%">
 <strong>Settings</strong><br>
