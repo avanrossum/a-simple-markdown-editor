@@ -224,7 +224,30 @@
 
 ---
 
-## v0.4.0 — TypeScript Migration
+## v0.4.0 — Focus Mode, Export & Auto-Save
+
+> Status: **Complete**
+
+### Focus Mode
+
+- [x] Distraction-free fullscreen editing window (toolbar + editor only, centered at comfortable column width)
+- [x] Enter via right-click tab > "Open in Focus Mode" or ⌘⇧F (View menu)
+- [x] Auto-saves content in background (500ms debounce) — parent window stays in sync via file watcher
+- [x] ESC to exit focus mode
+- [x] Parent tab shows "in focus mode" placeholder with "Switch to Focus Window" button
+
+### Export
+
+- [x] Export to PDF (File > Export As > PDF) — uses Electron's printToPDF via hidden offscreen window
+- [x] Export to HTML (File > Export As > HTML) — standalone document with inline light-theme styles
+
+### Auto-Save
+
+- [x] Auto-save toggle in Settings (off by default) with configurable delay (1s, 2s, 5s, 10s)
+
+---
+
+## v0.5.0 — TypeScript Migration
 
 > Status: **Planned**
 

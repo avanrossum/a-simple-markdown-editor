@@ -16,6 +16,9 @@ const { electronAPI } = window;
 const urlParams = new URLSearchParams(window.location.search);
 const WINDOW_ID = urlParams.get('windowId') || '0';
 const IS_FRESH_WINDOW = urlParams.get('fresh') === 'true';
+const IS_FOCUS_MODE = urlParams.get('mode') === 'focus';
+const FOCUS_FILE_PATH = IS_FOCUS_MODE ? decodeURIComponent(urlParams.get('filePath') || '') : null;
+const FOCUS_TAB_ID = IS_FOCUS_MODE ? urlParams.get('tabId') : null;
 
 // ── Tab Helpers ──
 
@@ -44,6 +47,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [diffData, setDiffData] = useState(null);
+  const [focusTabIds, setFocusTabIds] = useState(new Set());
   const [theme, setTheme] = useState('dark');
   const [fileBrowserWidth, setFileBrowserWidth] = useState(180);
   const [editorSplit, setEditorSplit] = useState(0.5);
@@ -99,6 +103,21 @@ export default function App() {
   // ── Session Restore ──
 
   useEffect(() => {
+    // Focus mode — load single file, no session
+    if (IS_FOCUS_MODE && FOCUS_FILE_PATH) {
+      (async () => {
+        const result = await electronAPI.readFile(FOCUS_FILE_PATH);
+        const content = result.success ? result.content : '';
+        const tab = createTab(FOCUS_FILE_PATH, content);
+        tab.savedContent = content;
+        setTabs([tab]);
+        setActiveTabId(tab.id);
+        electronAPI.watchFile(FOCUS_FILE_PATH);
+        sessionRestoredRef.current = true;
+      })();
+      return;
+    }
+
     // Fresh windows (Cmd+Shift+N) skip session restore
     if (IS_FRESH_WINDOW) {
       setTabs([createTab()]);
@@ -155,6 +174,7 @@ export default function App() {
   // ── Session Save ──
 
   useEffect(() => {
+    if (IS_FOCUS_MODE) return; // Focus windows don't persist sessions
     if (!sessionRestoredRef.current || !tabs) return;
 
     const timer = setTimeout(() => {
@@ -571,15 +591,50 @@ export default function App() {
   // ── Auto-Save ──
 
   useEffect(() => {
-    if (!settings?.autoSave || !activeTab?.filePath) return;
+    // Focus mode: always auto-save with short delay
+    const shouldAutoSave = IS_FOCUS_MODE || settings?.autoSave;
+    const delay = IS_FOCUS_MODE ? 500 : (settings?.autoSaveDelay || 5000);
+
+    if (!shouldAutoSave || !activeTab?.filePath) return;
     if (activeTab.content === activeTab.savedContent) return;
 
     const timer = setTimeout(() => {
       saveTab(activeTab.id);
-    }, settings.autoSaveDelay || 5000);
+    }, delay);
 
     return () => clearTimeout(timer);
   }, [settings?.autoSave, settings?.autoSaveDelay, activeTab?.id, activeTab?.content, activeTab?.savedContent, activeTab?.filePath, saveTab]);
+
+  // ── Focus Mode ──
+
+  const enterFocusMode = useCallback(async (tabId) => {
+    const tab = tabs?.find((t) => t.id === (tabId || activeTabId));
+    if (!tab?.filePath) return;
+    // Save before opening focus window so file is up to date
+    if (tab.content !== tab.savedContent) {
+      await saveTab(tab.id);
+    }
+    await electronAPI.openFocusWindow(tab.filePath, String(tab.id));
+    setFocusTabIds((prev) => new Set(prev).add(tab.id));
+  }, [tabs, activeTabId, saveTab]);
+
+  useEffect(() => {
+    if (IS_FOCUS_MODE) return; // Focus windows don't listen for these
+    const unsubs = [
+      electronAPI.onFocusWindowClosed((tabId) => {
+        setFocusTabIds((prev) => {
+          const next = new Set(prev);
+          // tabId comes as string from IPC, tab.id is a number
+          for (const id of next) {
+            if (String(id) === String(tabId)) next.delete(id);
+          }
+          return next;
+        });
+      }),
+      electronAPI.onEnterFocusMode(() => enterFocusMode()),
+    ];
+    return () => unsubs.forEach((fn) => fn());
+  }, [enterFocusMode]);
 
   // ── Menu Events ──
 
@@ -697,7 +752,43 @@ export default function App() {
     document.addEventListener('mouseup', onMouseUp);
   }, []);
 
+  // ── Focus Mode: ESC to close ──
+  useEffect(() => {
+    if (!IS_FOCUS_MODE) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') window.close();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   if (!settings || !tabs) return null; // Loading
+
+  const isActiveTabInFocus = activeTab && focusTabIds.has(activeTab.id);
+
+  // ── Focus Mode Layout ──
+  if (IS_FOCUS_MODE && activeTab) {
+    return (
+      <div className="app focus-mode">
+        <div className="title-bar">
+          <div className="drag-region" style={{ flex: 1 }} />
+        </div>
+        <div className="focus-mode-content">
+          <div className="focus-mode-editor">
+            <Toolbar onAction={handleToolbarAction} />
+            <Editor
+              ref={editorRef}
+              content={activeTab.content}
+              onChange={(val) => updateContent(activeTab.id, val)}
+              settings={settings}
+              theme={theme}
+              tabId={activeTab.id}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
@@ -717,6 +808,7 @@ export default function App() {
           onCloseOtherTabs={closeOtherTabs}
           onCloseTabsToRight={closeTabsToRight}
           onNewTab={newFile}
+          onFocusMode={enterFocusMode}
         />
       </div>
 
@@ -742,26 +834,45 @@ export default function App() {
 
         {/* Editor Column */}
         <div className="editor-column" style={{ flex: editorSplit }}>
-          <Toolbar onAction={handleToolbarAction} />
-          {showSearch && (
-            <SearchReplace
-              editorRef={editorRef}
-              showReplace={showReplace}
-              onClose={() => {
-                setShowSearch(false);
-                setShowReplace(false);
-              }}
-              onSearchChange={setSearchHighlight}
-            />
+          {isActiveTabInFocus ? (
+            <div className="focus-placeholder">
+              <div className="focus-placeholder-icon">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor" opacity="0.3">
+                  <path d="M5 15H3v4c0 1.1.9 2 2 2h4v-2H5v-4zM5 5h4V3H5c-1.1 0-2 .9-2 2v4h2V5zm14-2h-4v2h4v4h2V5c0-1.1-.9-2-2-2zm0 16h-4v2h4c1.1 0 2-.9 2-2v-4h-2v4z" />
+                </svg>
+              </div>
+              <div className="focus-placeholder-text">This document is open in Focus Mode</div>
+              <button
+                className="focus-placeholder-button"
+                onClick={() => electronAPI.focusFocusWindow(String(activeTab.id))}
+              >
+                Switch to Focus Window
+              </button>
+            </div>
+          ) : (
+            <>
+              <Toolbar onAction={handleToolbarAction} />
+              {showSearch && (
+                <SearchReplace
+                  editorRef={editorRef}
+                  showReplace={showReplace}
+                  onClose={() => {
+                    setShowSearch(false);
+                    setShowReplace(false);
+                  }}
+                  onSearchChange={setSearchHighlight}
+                />
+              )}
+              <Editor
+                ref={editorRef}
+                content={activeTab.content}
+                onChange={(val) => updateContent(activeTab.id, val)}
+                settings={settings}
+                theme={theme}
+                tabId={activeTab.id}
+              />
+            </>
           )}
-          <Editor
-            ref={editorRef}
-            content={activeTab.content}
-            onChange={(val) => updateContent(activeTab.id, val)}
-            settings={settings}
-            theme={theme}
-            tabId={activeTab.id}
-          />
         </div>
 
         {/* Editor/Preview Resize Handle */}

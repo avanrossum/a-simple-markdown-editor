@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-03-17
+
+### Added
+
+- Focus Mode: distraction-free fullscreen editing with centered content. Right-click tab > "Open in Focus Mode" or ⌘⇧F. Auto-saves in background. ESC to exit. Parent tab shows placeholder with "Switch to Focus Window" button.
+
 ## [0.3.3] - 2026-03-17
 
 ### Added

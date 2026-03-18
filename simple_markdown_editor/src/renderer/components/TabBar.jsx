@@ -60,7 +60,7 @@ function TabContextMenu({ x, y, items, onClose }) {
 
 // ── Tab Bar ──
 
-export default function TabBar({ tabs, activeTabId, onSelectTab, onCloseTab, onCloseOtherTabs, onCloseTabsToRight, onNewTab }) {
+export default function TabBar({ tabs, activeTabId, onSelectTab, onCloseTab, onCloseOtherTabs, onCloseTabsToRight, onNewTab, onFocusMode }) {
   const tabListRef = useRef(null);
   const [contextMenu, setContextMenu] = useState(null);
 
@@ -90,6 +90,8 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onCloseTab, onC
         { label: 'Show in Finder', action: () => electronAPI.showInFolder(tab.filePath) },
         { label: 'Copy Path', action: () => navigator.clipboard.writeText(tab.filePath) },
         { separator: true },
+        { label: 'Open in Focus Mode', action: () => onFocusMode?.(tab.id) },
+        { separator: true },
       );
     }
 
@@ -101,7 +103,7 @@ export default function TabBar({ tabs, activeTabId, onSelectTab, onCloseTab, onC
     );
 
     setContextMenu({ x: e.clientX, y: e.clientY, items });
-  }, [tabs, onCloseTab, onCloseOtherTabs, onCloseTabsToRight]);
+  }, [tabs, onCloseTab, onCloseOtherTabs, onCloseTabsToRight, onFocusMode]);
 
   return (
     <div className="tab-bar">

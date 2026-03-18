@@ -199,6 +199,15 @@ function buildMenu({ getFocusedWindow, store, onOpen, onSave, onSaveAs, onNewFil
         { role: 'zoomOut' },
         { type: 'separator' },
         { role: 'togglefullscreen' },
+        { type: 'separator' },
+        {
+          label: 'Focus Mode',
+          accelerator: 'CmdOrCtrl+Shift+F',
+          click: () => {
+            const win = getFocusedWindow();
+            if (win) win.webContents.send('enter-focus-mode');
+          },
+        },
       ],
     },
     {

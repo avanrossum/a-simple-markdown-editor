@@ -20,6 +20,20 @@ const electronAPI = {
   showInFolder: (filePath) => ipcRenderer.invoke('file:show-in-folder', filePath),
   searchInFolder: (folderPath, searchTerm, options) => ipcRenderer.invoke('file:search-in-folder', folderPath, searchTerm, options),
 
+  // ── Focus Mode ──
+  openFocusWindow: (filePath, tabId) => ipcRenderer.invoke('focus:open-window', filePath, tabId),
+  focusFocusWindow: (tabId) => ipcRenderer.invoke('focus:bring-to-front', tabId),
+  onFocusWindowClosed: (callback) => {
+    const handler = (_, tabId) => callback(tabId);
+    ipcRenderer.on('focus-window-closed', handler);
+    return () => ipcRenderer.removeListener('focus-window-closed', handler);
+  },
+  onEnterFocusMode: (callback) => {
+    const handler = () => callback();
+    ipcRenderer.on('enter-focus-mode', handler);
+    return () => ipcRenderer.removeListener('enter-focus-mode', handler);
+  },
+
   // ── Export ──
   exportHtml: (htmlBody, defaultName) => ipcRenderer.invoke('file:export-html', htmlBody, defaultName),
   exportPdf: (htmlBody, defaultName) => ipcRenderer.invoke('file:export-pdf', htmlBody, defaultName),

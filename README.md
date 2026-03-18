@@ -18,43 +18,50 @@ Signed and notarized with Apple — no Gatekeeper warnings. macOS 12+ required. 
 
 ## Screenshots
 
-**Three-pane layout** — file browser, editor, live preview with bidirectional scroll sync:
+<table>
+<tr>
+<td width="50%">
+<strong>Three-pane layout</strong><br>
+<sub>File browser, editor, live preview with bidirectional scroll sync</sub><br><br>
+<img src="screenshot.png" alt="Three-pane layout" width="100%">
+</td>
+<td width="50%">
+<strong>Focus mode</strong><br>
+<sub>Distraction-free fullscreen editing with centered content</sub><br><br>
+<img src="screenshot-focus.jpg" alt="Focus mode" width="100%">
+</td>
+</tr>
+<tr>
+<td width="50%">
+<strong>External change detection</strong><br>
+<sub>Full diff view with resolution options when a file changes on disk</sub><br><br>
+<img src="screenshot-diff.png" alt="Diff view" width="100%">
+</td>
+<td width="50%">
+<strong>Settings</strong><br>
+<sub>Theme, accent color, fonts, font size, auto-save, line numbers</sub><br><br>
+<img src="screenshot-settings.png" alt="Settings panel" width="100%">
+</td>
+</tr>
+</table>
 
-![Simple Markdown Editor — three-pane layout with file browser, editor, and live preview](screenshot.png)
+## Features
 
-**External change detection** — edit a file elsewhere, get a full diff view with resolution options:
-
-![External change detection with diff view](screenshot-diff.png)
-
-**Settings** — theme, accent color, fonts, font size, line numbers:
-
-![Settings panel](screenshot-settings.png)
-
-## What It Does
-
-**Editor** — CodeMirror 6 with markdown syntax highlighting. Formatting toolbar with smart toggle detection (buttons detect if formatting is already applied and toggle it off). Heading buttons cycle through levels. List buttons handle multi-line selections and continue numbering. Full keyboard shortcuts for all formatting actions (⌘B bold, ⌘I italic, ⌘K link, etc.). Search and replace (⌘F / ⌘H) with case sensitivity toggle, match count, and navigation. Per-tab undo history — each tab has its own independent undo/redo stack.
-
-**Live Preview** — GitHub Flavored Markdown rendered in real time. Bidirectional scroll sync keeps the editor and preview aligned (section-based anchor mapping). Local and remote images display inline. Relative image paths resolve correctly. Clickable links — local `.md` files open in a new tab, external links open in your default browser.
-
-**File Browser** — Expandable directory tree with auto-refresh on file system changes (including subdirectories). Double-click directories to set as root. Path navigation with back button. Right-click context menu: new markdown file, new folder, rename, delete (moves to trash), show in Finder, copy path, add/remove favorites. Find in Folder: right-click any folder to search filenames and file content within it.
-
-**Favorites** — Pin frequently-used files and folders for quick access. Drag-and-drop reordering. Click a favorite folder to open it in the file browser, or a file to open it in the editor. Stale path detection for unmounted drives.
-
-**Tabs** — Multiple open files with dirty indicators (unsaved dot), close buttons, new tab button. Switch between files without losing your place — each tab saves and restores its own scroll position and cursor. Right-click context menu: show in Finder, copy path, close tab, close other tabs, close tabs to the right. Auto-scrolls to keep the active tab visible.
-
-**Session Restore** — Open tabs, active tab, folder path, and window size/position all persist across app restarts. Close the app, open it tomorrow — everything's exactly where you left it. Multi-window support (⌘⇧N), each window preserves its own state.
-
-**External Change Detection** — Edit a file in another app while it's open here, and you get a diff view showing what changed. Options: keep your version, accept external changes, or save as a new file. No silent overwrites.
-
-**Customization** — Dark, light, or system-following themes. 7 accent colors. Configurable editor font (SF Mono, Menlo, Monaco, Courier New, Andale Mono) and preview font (Helvetica Neue, Georgia, Palatino, Avenir Next, Charter). Font size control. Line number toggling. Resizable panes — drag the handles between file browser, editor, and preview.
-
-**File Associations** — Registers as a handler for `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn`, `.mdwn`, `.mdx`, `.txt`. Shows up in Finder's "Open With" menu.
-
-**Auto-Save** — Optional auto-save with configurable delay (1–10 seconds). Toggle it on in Settings when working collaboratively, off when you want manual control.
-
-**Export** — File > Export As > PDF or HTML. Exports use clean light-theme styling with inline CSS — no external dependencies.
-
-**Auto-Updates** — Checks for new versions automatically (every 4 hours). Downloads in the background. One-click "Restart & Install" with release notes. "What's New" dialog after update.
+| | |
+|---|---|
+| **Editor** | CodeMirror 6 with markdown syntax highlighting, formatting toolbar with smart toggle detection, heading cycling, multi-line list handling, and full keyboard shortcuts (⌘B, ⌘I, ⌘K, etc.). Search and replace with case sensitivity and match navigation. Per-tab undo history. |
+| **Live Preview** | GitHub Flavored Markdown in real time. Bidirectional scroll sync. Local and remote images inline. Clickable links — `.md` files open in a new tab, external links open in your browser. |
+| **Focus Mode** | Distraction-free fullscreen editing. Just the toolbar and editor, centered at a comfortable column width. Auto-saves in the background. ESC or ⌘W to return. Via right-click tab menu or ⌘⇧F. |
+| **File Browser** | Expandable directory tree with auto-refresh. Context menu: new file, new folder, rename, delete (trash), show in Finder, copy path, favorites, find in folder. |
+| **Favorites** | Pin files and folders for quick access. Drag-and-drop reordering. Stale path detection for unmounted drives. |
+| **Tabs** | Dirty indicators, per-tab scroll/cursor restore, context menu (show in Finder, copy path, close, close others, close to right, focus mode). Auto-scrolls to keep active tab visible. |
+| **Auto-Save** | Optional, with configurable delay (1–10s). Toggle in Settings. Useful when collaborating with external tools. |
+| **Export** | File > Export As > PDF or HTML. Clean light-theme styling with inline CSS, no dependencies. |
+| **Session Restore** | Tabs, active tab, folder, and window bounds persist across restarts. Multi-window support (⌘⇧N). |
+| **External Changes** | Diff view when a file changes on disk while you have unsaved edits. Keep yours, accept theirs, or save as new. |
+| **Customization** | Dark, light, or system themes. 7 accent colors. Editor font (SF Mono, Menlo, Monaco, Courier New, Andale Mono), preview font (Helvetica Neue, Georgia, Palatino, Avenir Next, Charter), font size, line numbers, resizable panes. |
+| **File Associations** | Registers for `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn`, `.mdwn`, `.mdx`, `.txt`. Shows in Finder's "Open With". |
+| **Auto-Updates** | Checks every 4 hours. Background download. One-click "Restart & Install" with release notes. |
 
 ## What It Doesn't Do
 

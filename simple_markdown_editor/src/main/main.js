@@ -20,6 +20,9 @@ const isDev = process.argv.includes('--dev');
 let windowIdCounter = 0;
 let isQuitting = false;
 
+// ── Focus Mode State ──
+const focusWindows = new Map(); // tabId → BrowserWindow
+
 // ── Auto-Update State ──
 let updateDialogWindow = null;
 let isManualUpdateCheck = false;
@@ -112,6 +115,73 @@ function createWindow(options = {}) {
     // (on quit we preserve all sessions for next launch)
     if (!isQuitting) {
       store.removeWindowSession(id);
+    }
+  });
+
+  // Security: prevent navigation and new windows
+  win.webContents.on('will-navigate', (e) => e.preventDefault());
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+
+  return win;
+}
+
+// ── Focus Mode Window ──
+
+function createFocusWindow({ filePath, parentWindowId, tabId }) {
+  // If already open for this tab, bring to front
+  const existing = focusWindows.get(tabId);
+  if (existing && !existing.isDestroyed()) {
+    existing.focus();
+    return existing;
+  }
+
+  const id = String(windowIdCounter++);
+
+  const win = new BrowserWindow({
+    width: 900,
+    height: 700,
+    backgroundColor: getBackgroundColor(),
+    titleBarStyle: 'hiddenInset',
+    trafficLightPosition: { x: 12, y: 12 },
+    show: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+
+  win._windowId = id;
+  win._isFocusWindow = true;
+  win._parentWindowId = parentWindowId;
+  win._tabId = tabId;
+  win._forceClose = true; // Skip dirty check — auto-save keeps content synced
+  windows.add(win);
+  focusWindows.set(tabId, win);
+
+  const query = `windowId=${id}&mode=focus&filePath=${encodeURIComponent(filePath)}&parentWindowId=${parentWindowId}&tabId=${tabId}`;
+
+  if (isDev) {
+    win.loadURL(`http://localhost:5173/src/renderer/index.html?${query}`);
+  } else {
+    win.loadFile(path.join(__dirname, '../../dist-renderer/src/renderer/index.html'), {
+      query: { windowId: id, mode: 'focus', filePath, parentWindowId, tabId },
+    });
+  }
+
+  win.once('ready-to-show', () => {
+    win.show();
+    win.setFullScreen(true);
+  });
+
+  win.on('closed', () => {
+    windows.delete(win);
+    focusWindows.delete(tabId);
+    // Notify parent window
+    const parent = [...windows].find((w) => w._windowId === parentWindowId);
+    if (parent && !parent.isDestroyed()) {
+      parent.webContents.send('focus-window-closed', tabId);
     }
   });
 
@@ -424,6 +494,26 @@ app.whenReady().then(() => {
   ipcMain.handle('window:cancel-close', () => {
     // If the quit sequence was in progress and user canceled, reset the flag
     isQuitting = false;
+  });
+
+  // ── Focus Mode IPC ──
+
+  ipcMain.handle('focus:open-window', (event, filePath, tabId) => {
+    const parentWin = BrowserWindow.fromWebContents(event.sender);
+    const parentWindowId = parentWin?._windowId;
+    if (!parentWindowId || !filePath) return { success: false };
+    createFocusWindow({ filePath, parentWindowId, tabId });
+    return { success: true };
+  });
+
+  ipcMain.handle('focus:bring-to-front', (_, tabId) => {
+    const win = focusWindows.get(tabId) || focusWindows.get(String(tabId));
+    if (win && !win.isDestroyed()) {
+      win.show();
+      win.focus();
+      return { success: true };
+    }
+    return { success: false };
   });
 
   registerIpcHandlers({
