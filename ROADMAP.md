@@ -245,6 +245,15 @@
 
 - [x] Auto-save toggle in Settings (off by default) with configurable delay (1s, 2s, 5s, 10s)
 
+### Collaborative Editing (v0.4.1–v0.4.3)
+
+- [x] Three-way merge: non-overlapping external edits merge seamlessly via `createPatch`/`applyPatch` with fuzz factor
+- [x] Interactive per-hunk diff view: click change blocks to toggle mine/theirs, bulk select, mixed merge via "Apply Selection"
+- [x] Hunk grouping: short context gaps (1-2 lines) absorbed so heading+body toggle as one block
+- [x] Empty content guard: never accept empty/truncated file reads (mid-write protection)
+- [x] Focus mode skips file watcher (auto-save owns the file)
+- [x] External file deletion detection: dialog prompts close tab or re-save
+
 ---
 
 ## v0.5.0 — TypeScript Migration

@@ -38,9 +38,18 @@ Signed and notarized with Apple — no Gatekeeper warnings. macOS 12+ required. 
 <img src="screenshot-diff2.png" alt="Interactive diff view" width="100%">
 </td>
 <td width="50%">
+<strong>File deletion detection</strong><br>
+<sub>Prompt to close or re-save when a file is deleted from disk</sub><br><br>
+<img src="screenshot-resave.png" alt="File deleted dialog" width="100%">
+</td>
+</tr>
+<tr>
+<td width="50%">
 <strong>Settings</strong><br>
 <sub>Theme, accent color, fonts, font size, auto-save, line numbers</sub><br><br>
 <img src="screenshot-settings.png" alt="Settings panel" width="100%">
+</td>
+<td width="50%">
 </td>
 </tr>
 </table>
@@ -58,7 +67,7 @@ Signed and notarized with Apple — no Gatekeeper warnings. macOS 12+ required. 
 | **Auto-Save** | Optional, with configurable delay (1–10s). Toggle in Settings. Useful when collaborating with external tools. |
 | **Export** | File > Export As > PDF or HTML. Clean light-theme styling with inline CSS, no dependencies. |
 | **Session Restore** | Tabs, active tab, folder, and window bounds persist across restarts. Multi-window support (⌘⇧N). |
-| **External Changes** | Diff view when a file changes on disk while you have unsaved edits. Keep yours, accept theirs, or save as new. |
+| **External Changes** | Three-way merge when you and an external tool edit different parts of the same file — changes combine seamlessly. Same-line conflicts show an interactive per-hunk diff view with click-to-toggle accept/reject. Detects externally deleted files with close or re-save prompt. |
 | **Customization** | Dark, light, or system themes. 7 accent colors. Editor font (SF Mono, Menlo, Monaco, Courier New, Andale Mono), preview font (Helvetica Neue, Georgia, Palatino, Avenir Next, Charter), font size, line numbers, resizable panes. |
 | **File Associations** | Registers for `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn`, `.mdwn`, `.mdx`, `.txt`. Shows in Finder's "Open With". |
 | **Auto-Updates** | Checks every 4 hours. Background download. One-click "Restart & Install" with release notes. |
