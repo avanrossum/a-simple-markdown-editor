@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-03-18
+
+### Added
+
+- Three-way merge for external changes: when both you and an external tool (e.g., Claude) edit different parts of the same file, changes merge seamlessly without interruption. Only same-line conflicts trigger the diff dialog.
+
+### Fixed
+
+- External change detection no longer accepts empty/truncated file reads (mid-write protection)
+- Focus mode ignores file watcher events (auto-save owns the file, prevents race conditions)
+
 ## [0.4.0] - 2026-03-17
 
 ### Added

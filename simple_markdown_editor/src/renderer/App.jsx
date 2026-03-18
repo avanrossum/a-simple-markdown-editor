@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { createPatch, applyPatch } from 'diff';
 import TabBar from './components/TabBar';
 import FileBrowser from './components/FileBrowser';
 import Editor from './components/Editor';
@@ -522,6 +523,9 @@ export default function App() {
   // ── File Watching (external changes) ──
 
   useEffect(() => {
+    // Focus mode owns the file — ignore external changes, auto-save takes precedence
+    if (IS_FOCUS_MODE) return;
+
     const unsub = electronAPI.onFileChanged(async (filePath) => {
       if (!tabs) return;
       const tab = tabs.find((t) => t.filePath === filePath);
@@ -531,10 +535,17 @@ export default function App() {
       if (!result.success) return;
 
       const externalContent = result.content;
+
+      // Guard: never accept empty content (file may be mid-write/truncated)
+      if (!externalContent && tab.content) return;
+
+      // If content on disk matches what we have, nothing to do
+      if (externalContent === tab.content) return;
+
       const hasLocalChanges = tab.content !== tab.savedContent;
 
       if (!hasLocalChanges) {
-        // No local edits — silently update
+        // No local edits — silently accept external content
         setTabs((prev) =>
           prev.map((t) =>
             t.filePath === filePath
@@ -543,13 +554,29 @@ export default function App() {
           )
         );
       } else {
-        // Local edits exist — show diff dialog
-        setDiffData({
-          tabId: tab.id,
-          filePath,
-          currentContent: tab.content,
-          externalContent,
-        });
+        // Three-way merge: try to combine user's edits with external changes
+        // savedContent = common ancestor, tab.content = user's version, externalContent = external version
+        const patch = createPatch('file', tab.savedContent, externalContent);
+        const merged = applyPatch(tab.content, patch, { fuzzFactor: 3 });
+
+        if (merged !== false) {
+          // Clean merge — both edits applied without conflict
+          setTabs((prev) =>
+            prev.map((t) =>
+              t.filePath === filePath
+                ? { ...t, content: merged, savedContent: externalContent }
+                : t
+            )
+          );
+        } else {
+          // Conflicting edits on the same lines — show diff dialog
+          setDiffData({
+            tabId: tab.id,
+            filePath,
+            currentContent: tab.content,
+            externalContent,
+          });
+        }
       }
     });
     return unsub;
