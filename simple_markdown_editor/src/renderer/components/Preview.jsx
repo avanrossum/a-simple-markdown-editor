@@ -92,7 +92,14 @@ function createAnnotatedRenderer() {
         if (token.task) {
           const cls = token.checked ? 'task-check task-check--checked' : 'task-check';
           const icon = token.checked ? '&#10003;' : '';
-          body = `<span class="${cls}">${icon}</span>${body.replace(/<input.*?>/i, '')}`;
+          const checkbox = `<span class="${cls}">${icon}</span>`;
+          // Remove any <input> left by marked, then inject checkbox inside first <p> or at start
+          body = body.replace(/<input.*?>/i, '');
+          if (body.trimStart().startsWith('<p>')) {
+            body = body.replace('<p>', `<p>${checkbox}`);
+          } else {
+            body = checkbox + body;
+          }
         }
         return `<li>${body}</li>\n`;
       },
