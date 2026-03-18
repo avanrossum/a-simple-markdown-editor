@@ -213,8 +213,24 @@
   font-weight: 600;
 }
 
-.preview-container input[type="checkbox"] {
+.preview-container .task-check {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--text-muted);
+  border-radius: 3px;
   margin-right: var(--space-sm);
+  vertical-align: -2px;
+  text-align: center;
+  line-height: 14px;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.preview-container .task-check--checked {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
 
 /* ── Toolbar ── */

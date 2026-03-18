@@ -87,6 +87,15 @@ function createAnnotatedRenderer() {
         const attr = token._sourceLine != null ? ` data-source-line="${token._sourceLine}"` : '';
         return `<blockquote${attr}>\n${body}</blockquote>\n`;
       },
+      listitem(token) {
+        let body = this.parser.parse(token.tokens, !!token.loose);
+        if (token.task) {
+          const cls = token.checked ? 'task-check task-check--checked' : 'task-check';
+          const icon = token.checked ? '&#10003;' : '';
+          body = `<span class="${cls}">${icon}</span>${body.replace(/<input.*?>/i, '')}`;
+        }
+        return `<li>${body}</li>\n`;
+      },
       list(token) {
         const tag = token.ordered ? 'ol' : 'ul';
         const startAttr = token.ordered && token.start !== 1 ? ` start="${token.start}"` : '';

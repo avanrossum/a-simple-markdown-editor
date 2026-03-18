@@ -63,19 +63,44 @@ function buildEditorTheme(isDark, fontSize, fontFamily) {
 
 // ── Markdown Highlight Style ──
 
-const markdownHighlightStyle = HighlightStyle.define([
-  { tag: tags.heading1, fontWeight: 'bold', fontSize: '1.4em' },
-  { tag: tags.heading2, fontWeight: 'bold', fontSize: '1.25em' },
-  { tag: tags.heading3, fontWeight: 'bold', fontSize: '1.1em' },
-  { tag: tags.strong, fontWeight: 'bold' },
-  { tag: tags.emphasis, fontStyle: 'italic' },
-  { tag: tags.strikethrough, textDecoration: 'line-through' },
-  { tag: tags.link, color: 'var(--accent)', textDecoration: 'underline' },
-  { tag: tags.url, color: 'var(--accent)' },
-  { tag: tags.monospace, fontFamily: 'var(--font-mono)', backgroundColor: 'var(--bg-elevated)', borderRadius: '3px', padding: '0 3px' },
-  { tag: tags.quote, color: 'var(--text-secondary)', fontStyle: 'italic' },
-  { tag: tags.meta, color: 'var(--text-muted)' },
-]);
+function buildMarkdownHighlightStyle(isDark) {
+  // Tasteful colors — subtle enough not to distract, distinct enough to scan
+  const heading = isDark ? '#e0a856' : '#b8860b';
+  const bold = isDark ? '#e8c882' : '#9a7b2a';
+  const italic = isDark ? '#b0b8d0' : '#5a6580';
+  const strike = isDark ? '#707880' : '#999';
+  const code = isDark ? '#7ec8a0' : '#2e8b57';
+  const link = 'var(--accent)';
+  const quote = isDark ? '#8899aa' : '#6b7b8b';
+  const marker = isDark ? '#606878' : '#a0a8b0';
+  const listMarker = isDark ? '#8890a0' : '#6b7280';
+
+  return HighlightStyle.define([
+    // Headings — subtle size bump + color, not huge
+    { tag: tags.heading1, fontWeight: 'bold', fontSize: '1.2em', color: heading },
+    { tag: tags.heading2, fontWeight: 'bold', fontSize: '1.1em', color: heading },
+    { tag: tags.heading3, fontWeight: '600', color: heading },
+    { tag: tags.heading4, fontWeight: '600', color: heading },
+    // Inline formatting
+    { tag: tags.strong, fontWeight: 'bold', color: bold },
+    { tag: tags.emphasis, fontStyle: 'italic', color: italic },
+    { tag: tags.strikethrough, textDecoration: 'line-through', color: strike },
+    // Links
+    { tag: tags.link, color: link, textDecoration: 'underline' },
+    { tag: tags.url, color: link },
+    // Code
+    { tag: tags.monospace, fontFamily: 'var(--font-mono)', color: code, backgroundColor: 'var(--bg-elevated)', borderRadius: '3px', padding: '0 3px' },
+    // Block quotes
+    { tag: tags.quote, color: quote, fontStyle: 'italic' },
+    // Markdown syntax markers (##, **, __, etc.) — dimmed
+    { tag: tags.processingInstruction, color: marker },
+    { tag: tags.meta, color: marker },
+    // List markers (-, *, 1.)
+    { tag: tags.list, color: listMarker },
+    // Horizontal rules
+    { tag: tags.contentSeparator, color: marker },
+  ]);
+}
 
 // ── Formatting Actions ──
 
@@ -151,7 +176,7 @@ const Editor = forwardRef(function Editor({ content, onChange, settings, theme, 
       drawSelection(),
       highlightActiveLine(),
       markdown({ base: markdownLanguage, codeLanguages: languages }),
-      syntaxHighlighting(markdownHighlightStyle),
+      syntaxHighlighting(buildMarkdownHighlightStyle(theme === 'dark')),
       syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
       keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
       updateListener,
