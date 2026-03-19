@@ -8,6 +8,6 @@
   <rect x="64" y="64" width="896" height="896" rx="180" fill="url(#bg)"/>
   <path d="M320 180 L620 180 L740 300 L740 844 L320 844 Z" fill="#242830" stroke="#3b82f6" stroke-width="4"/>
   <path d="M620 180 L620 300 L740 300" fill="#2e3340" stroke="#3b82f6" stroke-width="4"/>
-  <text x="530" y="580" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="220" font-weight="700" fill="#e8e8e8" text-anchor="middle">MD</text>
+  <text x="530" y="580" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="220" font-weight="700" fill="#e8e8e8" text-anchor="middle">SM</text>
   <rect x="380" y="640" width="300" height="6" rx="3" fill="#3b82f6"/>
 </svg>

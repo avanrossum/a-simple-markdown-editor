@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-03-19
+
+### Added
+
+- Find in Folder keyboard shortcut (⌘⇧G) — accessible from Edit menu
+- Power User Features section in README
+
+### Changed
+
+- App icon updated from "MD" to "SM" to match SideMark rebrand
+
 ## [1.0.0] - 2026-03-19
 
 ### Changed
