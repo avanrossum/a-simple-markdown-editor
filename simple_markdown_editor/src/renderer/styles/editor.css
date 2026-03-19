@@ -392,3 +392,84 @@ mark.search-highlight--current {
   background: color-mix(in srgb, var(--accent) 55%, transparent);
   outline: 1.5px solid var(--accent);
 }
+
+/* ── Toast Notifications ── */
+
+.toast-container {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 150;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-sm);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-elevated);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  font-size: 12px;
+  color: var(--text-primary);
+  pointer-events: auto;
+  max-width: 360px;
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity var(--transition-slow), transform var(--transition-slow);
+}
+
+.toast--visible { opacity: 1; transform: translateX(0); }
+.toast--exiting { opacity: 0; transform: translateX(20px); }
+
+.toast--success { border-left: 3px solid var(--success); }
+.toast--warning { border-left: 3px solid var(--warning); }
+.toast--error   { border-left: 3px solid var(--error); }
+.toast--info    { border-left: 3px solid var(--accent); }
+
+.toast-content { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.toast-message { font-weight: 500; }
+.toast-detail  { font-size: 11px; color: var(--text-secondary); }
+
+.toast-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+}
+.toast-close:hover { color: var(--text-primary); }
+
+/* ── Git Gutter Markers ── */
+
+.cm-git-gutter {
+  width: 3px;
+  padding: 0;
+}
+
+.git-gutter-added {
+  width: 3px;
+  height: 100%;
+  background: var(--success);
+}
+
+.git-gutter-modified {
+  width: 3px;
+  height: 100%;
+  background: var(--accent);
+}
+
+.git-gutter-deleted {
+  width: 3px;
+  height: 3px;
+  margin-top: auto;
+  background: var(--error);
+  border-radius: 1px;
+}

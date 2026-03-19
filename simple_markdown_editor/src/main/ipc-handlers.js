@@ -2,6 +2,10 @@ const { ipcMain, dialog, shell, app, nativeTheme, BrowserWindow } = require('ele
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
+
+const execFileAsync = promisify(execFile);
 
 // ── Path Validation ──
 // Defense-in-depth: restrict file operations to safe directories.
@@ -517,6 +521,31 @@ ${htmlBody}
 
   ipcMain.handle('app:parent-dir', async (_, dirPath) => {
     return path.dirname(dirPath);
+  });
+
+  // ── Git ──
+
+  ipcMain.handle('git:get-baseline', async (_, filePath) => {
+    try {
+      requireValidPath(filePath);
+      const dir = path.dirname(filePath);
+
+      const { stdout: repoRoot } = await execFileAsync(
+        'git', ['rev-parse', '--show-toplevel'],
+        { cwd: dir, timeout: 5000 }
+      );
+      const root = repoRoot.trim();
+      const relativePath = path.relative(root, filePath);
+
+      const { stdout: baseline } = await execFileAsync(
+        'git', ['show', `HEAD:${relativePath}`],
+        { cwd: root, timeout: 5000, maxBuffer: 10 * 1024 * 1024 }
+      );
+
+      return { success: true, content: baseline, repoRoot: root };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
   });
 }
 

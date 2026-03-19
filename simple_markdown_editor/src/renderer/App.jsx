@@ -10,6 +10,7 @@ import DiffView from './components/DiffView';
 import PreviewHeader from './components/PreviewHeader';
 import FindInFolder from './components/FindInFolder';
 import Settings from '../settings/Settings';
+import ToastContainer from './components/Toast';
 
 const { electronAPI } = window;
 
@@ -48,6 +49,8 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [diffData, setDiffData] = useState(null);
+  const [toasts, setToasts] = useState([]);
+  const [editorContextMenu, setEditorContextMenu] = useState(null);
   const [focusTabIds, setFocusTabIds] = useState(new Set());
   const [theme, setTheme] = useState('dark');
   const [fileBrowserWidth, setFileBrowserWidth] = useState(180);
@@ -59,6 +62,7 @@ export default function App() {
   const fileBrowserWidthRef = useRef(fileBrowserWidth);
   const editorSplitRef = useRef(editorSplit);
   const tabViewStatesRef = useRef(new Map()); // Map<tabId, {scrollTop}>
+  const toastIdRef = useRef(0);
   const tabsRef = useRef(tabs);
   const activeTabIdRef = useRef(activeTabId);
   const folderPathRef = useRef(folderPath);
@@ -68,6 +72,39 @@ export default function App() {
   folderPathRef.current = folderPath;
 
   const activeTab = tabs?.find((t) => t.id === activeTabId) || tabs?.[0];
+
+  // ── Toast Notifications ──
+
+  const addToast = useCallback((message, opts = {}) => {
+    const id = ++toastIdRef.current;
+    setToasts((prev) => [...prev, { id, message, ...opts }]);
+    return id;
+  }, []);
+
+  const dismissToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  // ── Git Gutter ──
+
+  const gitBaselineRef = useRef(new Map()); // Map<tabId, string>
+  const gitDebounceRef = useRef(null);
+
+  const fetchGitBaseline = useCallback(async (tabId, filePath) => {
+    if (!filePath) {
+      gitBaselineRef.current.delete(tabId);
+      editorRef.current?.clearGitMarkers();
+      return;
+    }
+    const result = await electronAPI.getGitBaseline(filePath);
+    if (result.success) {
+      gitBaselineRef.current.set(tabId, result.content);
+      editorRef.current?.updateGitMarkers(result.content);
+    } else {
+      gitBaselineRef.current.delete(tabId);
+      editorRef.current?.clearGitMarkers();
+    }
+  }, []);
 
   // ── Tab View State (scroll + cursor) ──
 
@@ -225,8 +262,16 @@ export default function App() {
       }
     });
 
+    // Fetch git baseline for the active tab
+    const tab = tabsRef.current?.find((t) => t.id === activeTabId);
+    if (tab?.filePath) {
+      fetchGitBaseline(activeTabId, tab.filePath);
+    } else {
+      editorRef.current?.clearGitMarkers();
+    }
+
     return () => cancelAnimationFrame(frame);
-  }, [activeTabId]);
+  }, [activeTabId, fetchGitBaseline]);
 
   // ── Theme ──
 
@@ -320,11 +365,13 @@ export default function App() {
         )
       );
       await electronAPI.watchFile(tab.filePath);
+      // Refresh git baseline after save (HEAD may have changed)
+      fetchGitBaseline(tab.id, tab.filePath);
       return true;
     }
     await electronAPI.watchFile(tab.filePath);
     return false;
-  }, [tabs, activeTabId]);
+  }, [tabs, activeTabId, fetchGitBaseline]);
 
   const saveTabAs = useCallback(async (tabId) => {
     const tab = tabs?.find((t) => t.id === (tabId || activeTabId));
@@ -537,6 +584,14 @@ export default function App() {
     setTabs((prev) =>
       prev.map((t) => (t.id === tabId ? { ...t, content } : t))
     );
+    // Debounced git gutter update
+    if (gitDebounceRef.current) clearTimeout(gitDebounceRef.current);
+    gitDebounceRef.current = setTimeout(() => {
+      const baseline = gitBaselineRef.current.get(tabId);
+      if (baseline !== undefined) {
+        editorRef.current?.updateGitMarkers(baseline);
+      }
+    }, 300);
   }, []);
 
   // ── File Watching (external changes) ──
@@ -587,6 +642,12 @@ export default function App() {
                 : t
             )
           );
+          const fileName = filePath.split('/').pop();
+          addToast(`${fileName} merged`, {
+            detail: 'External changes applied cleanly',
+            type: 'success',
+            duration: 4000,
+          });
         } else {
           // Conflicting edits on the same lines — show diff dialog
           setDiffData({
@@ -732,6 +793,32 @@ export default function App() {
 
   // ── Menu Events ──
 
+  // ── Copy with Context ──
+
+  const copyFileContent = useCallback(async () => {
+    if (!activeTab) return;
+    await navigator.clipboard.writeText(activeTab.content || '');
+    addToast('Copied file contents', { type: 'info', duration: 2000 });
+  }, [activeTab, addToast]);
+
+  const copySelectionWithContext = useCallback(async () => {
+    if (!activeTab || !editorRef.current) return;
+    const { text, hasSelection, startLine, endLine } = editorRef.current.getSelection();
+    const filePath = activeTab.filePath || 'Untitled';
+    if (hasSelection) {
+      const lineRange = startLine === endLine ? `L${startLine}` : `L${startLine}-${endLine}`;
+      const header = `// ${filePath}:${lineRange}\n\n`;
+      await navigator.clipboard.writeText(header + text);
+      addToast(`Copied lines ${lineRange} with path`, { type: 'info', duration: 2000 });
+    } else {
+      const header = `// ${filePath}\n\n`;
+      await navigator.clipboard.writeText(header + (activeTab.content || ''));
+      addToast('Copied file with path', { type: 'info', duration: 2000 });
+    }
+  }, [activeTab, addToast]);
+
+  // ── Menu Event Listeners ──
+
   useEffect(() => {
     const unsubs = [
       electronAPI.onMenuSave(() => saveTab()),
@@ -754,17 +841,43 @@ export default function App() {
       electronAPI.onShowAbout(() => setShowAbout(true)),
       electronAPI.onCloseTab(() => closeTab(activeTabId)),
       electronAPI.onCloseWindow(() => closeWindow()),
+      electronAPI.onCopyFileContent(() => copyFileContent()),
+      electronAPI.onCopySelectionWithContext(() => copySelectionWithContext()),
     ];
     return () => unsubs.forEach((fn) => fn());
-  }, [saveTab, saveTabAs, newFile, openFile, duplicateFile, exportAs, closeTab, closeWindow, activeTabId]);
+  }, [saveTab, saveTabAs, newFile, openFile, duplicateFile, exportAs, closeTab, closeWindow, activeTabId, copyFileContent, copySelectionWithContext]);
+
+  // ── Editor Context Menu ──
+
+  const handleEditorContextMenu = useCallback((e) => {
+    e.preventDefault();
+    const hasSelection = editorRef.current?.getSelection()?.hasSelection;
+    setEditorContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items: [
+        { label: 'Cut', action: () => document.execCommand('cut'), disabled: !hasSelection },
+        { label: 'Copy', action: () => document.execCommand('copy'), disabled: !hasSelection },
+        { label: 'Paste', action: () => document.execCommand('paste') },
+        { label: 'Select All', action: () => document.execCommand('selectAll') },
+        { separator: true },
+        { label: 'Copy File Contents', action: () => copyFileContent() },
+        { label: 'Copy with Path', action: () => copySelectionWithContext(), shortcut: '⌘⌥C' },
+      ],
+    });
+  }, [copyFileContent, copySelectionWithContext]);
 
   // ── Toolbar Actions ──
 
   const handleToolbarAction = useCallback((action) => {
+    if (action === 'copyContext') {
+      copySelectionWithContext();
+      return;
+    }
     if (editorRef.current) {
       editorRef.current.applyFormatting(action);
     }
-  }, []);
+  }, [copySelectionWithContext]);
 
   // ── Helpers ──
 
@@ -870,14 +983,16 @@ export default function App() {
         <div className="focus-mode-content">
           <div className="focus-mode-editor">
             <Toolbar onAction={handleToolbarAction} />
-            <Editor
-              ref={editorRef}
-              content={activeTab.content}
-              onChange={(val) => updateContent(activeTab.id, val)}
-              settings={settings}
-              theme={theme}
-              tabId={activeTab.id}
-            />
+            <div onContextMenu={handleEditorContextMenu} style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+              <Editor
+                ref={editorRef}
+                content={activeTab.content}
+                onChange={(val) => updateContent(activeTab.id, val)}
+                settings={settings}
+                theme={theme}
+                tabId={activeTab.id}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -957,14 +1072,16 @@ export default function App() {
                   onSearchChange={setSearchHighlight}
                 />
               )}
-              <Editor
-                ref={editorRef}
-                content={activeTab.content}
-                onChange={(val) => updateContent(activeTab.id, val)}
-                settings={settings}
-                theme={theme}
-                tabId={activeTab.id}
-              />
+              <div onContextMenu={handleEditorContextMenu} style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                <Editor
+                  ref={editorRef}
+                  content={activeTab.content}
+                  onChange={(val) => updateContent(activeTab.id, val)}
+                  settings={settings}
+                  theme={theme}
+                  tabId={activeTab.id}
+                />
+              </div>
             </>
           )}
         </div>
@@ -1036,6 +1153,34 @@ export default function App() {
             </button>
           </div>
         </div>
+      )}
+
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+
+      {editorContextMenu && (
+        <>
+          <div className="context-menu-backdrop" onClick={() => setEditorContextMenu(null)} />
+          <div className="context-menu" style={{ left: editorContextMenu.x, top: editorContextMenu.y }}>
+            {editorContextMenu.items.map((item, i) =>
+              item.separator ? (
+                <div key={i} className="context-menu-separator" />
+              ) : (
+                <div
+                  key={i}
+                  className={`context-menu-item ${item.disabled ? 'context-menu-item--disabled' : ''}`}
+                  onClick={() => {
+                    if (item.disabled) return;
+                    setEditorContextMenu(null);
+                    item.action();
+                  }}
+                >
+                  <span>{item.label}</span>
+                  {item.shortcut && <span className="context-menu-shortcut">{item.shortcut}</span>}
+                </div>
+              )
+            )}
+          </div>
+        </>
       )}
     </div>
   );

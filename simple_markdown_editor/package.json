@@ -1,6 +1,6 @@
 {
   "name": "simple-markdown-editor",
-  "version": "0.4.5",
+  "version": "0.5.0",
   "description": "A stupid simple markdown editor",
   "main": "src/main/main.js",
   "author": {

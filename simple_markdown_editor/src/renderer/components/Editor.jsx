@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { EditorView, keymap, lineNumbers, highlightActiveLine, drawSelection } from '@codemirror/view';
-import { EditorState, Transaction } from '@codemirror/state';
+import { EditorState, Transaction, RangeSet } from '@codemirror/state';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { searchKeymap } from '@codemirror/search';
 import { syntaxHighlighting, defaultHighlightStyle, HighlightStyle } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
+import { gitGutterExtension, setGitMarkers, computeGitMarkers } from '../gitGutter';
 
 // ── Editor Theme Factory ──
 // Built dynamically so CodeMirror re-measures font metrics when settings change
@@ -187,6 +188,8 @@ const Editor = forwardRef(function Editor({ content, onChange, settings, theme, 
     if (settings?.showLineNumbers) {
       extensions.push(lineNumbers());
     }
+
+    extensions.push(...gitGutterExtension);
 
     extensionsRef.current = extensions;
 
@@ -553,6 +556,38 @@ const Editor = forwardRef(function Editor({ content, onChange, settings, theme, 
         const handler = () => callback();
         view.scrollDOM.addEventListener('scroll', handler, { passive: true });
         return () => view.scrollDOM.removeEventListener('scroll', handler);
+      },
+
+      // ── Git Gutter ──
+
+      updateGitMarkers(baseline) {
+        const view = viewRef.current;
+        if (!view) return;
+        const current = view.state.doc.toString();
+        const markers = computeGitMarkers(view.state.doc, baseline, current);
+        view.dispatch({ effects: setGitMarkers.of(markers) });
+      },
+
+      clearGitMarkers() {
+        const view = viewRef.current;
+        if (!view) return;
+        view.dispatch({ effects: setGitMarkers.of(RangeSet.empty) });
+      },
+
+      // ── Selection ──
+
+      getSelection() {
+        const view = viewRef.current;
+        if (!view) return { text: '', hasSelection: false, startLine: 1, endLine: 1 };
+        const { from, to } = view.state.selection.main;
+        const startLine = view.state.doc.lineAt(from).number;
+        const endLine = from !== to ? view.state.doc.lineAt(to).number : startLine;
+        return {
+          text: from !== to ? view.state.sliceDoc(from, to) : '',
+          hasSelection: from !== to,
+          startLine,
+          endLine,
+        };
       },
     };
   }, []);

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-03-18
+
+### Added
+
+- Git gutter markers: green (added), blue (modified), red (deleted) indicators in the editor gutter showing changes since last git commit. Updates on content change (debounced), save, tab switch, and external merge.
+- Toast notifications: non-blocking slide-in notifications at bottom-right. Used for merge success alerts, copy confirmations, and other transient feedback. Auto-dismiss with configurable duration.
+- Copy with Context: one-click copy of file contents with file path and line numbers (⌘⌥C). Selection copies `// path:L14-L27` header + text. No selection copies full file with path. Available via toolbar button, Edit menu, and right-click context menu.
+- Editor context menu: right-click in editor shows Cut, Copy, Paste, Select All, Copy File Contents, and Copy with Path.
+
 ## [0.4.5] - 2026-03-18
 
 ### Fixed

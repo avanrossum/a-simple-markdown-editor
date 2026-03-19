@@ -185,6 +185,22 @@ function buildMenu({ getFocusedWindow, store, onOpen, onSave, onSaveAs, onNewFil
             if (win) win.webContents.send('toggle-search-replace');
           },
         },
+        { type: 'separator' },
+        {
+          label: 'Copy File Contents',
+          click: () => {
+            const win = getFocusedWindow();
+            if (win) win.webContents.send('copy-file-content');
+          },
+        },
+        {
+          label: 'Copy Selection with Path',
+          accelerator: 'CmdOrCtrl+Alt+C',
+          click: () => {
+            const win = getFocusedWindow();
+            if (win) win.webContents.send('copy-selection-with-context');
+          },
+        },
       ],
     },
     {

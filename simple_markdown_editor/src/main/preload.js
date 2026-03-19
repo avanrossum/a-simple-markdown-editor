@@ -160,6 +160,22 @@ const electronAPI = {
   getSystemTheme: () => ipcRenderer.invoke('app:system-theme'),
   getHomeDir: () => ipcRenderer.invoke('app:home-dir'),
   getParentDir: (dirPath) => ipcRenderer.invoke('app:parent-dir', dirPath),
+
+  // ── Git ──
+  getGitBaseline: (filePath) => ipcRenderer.invoke('git:get-baseline', filePath),
+
+  // ── Menu Events (copy) ──
+  onCopyFileContent: (callback) => {
+    const handler = () => callback();
+    ipcRenderer.on('copy-file-content', handler);
+    return () => ipcRenderer.removeListener('copy-file-content', handler);
+  },
+  onCopySelectionWithContext: (callback) => {
+    const handler = () => callback();
+    ipcRenderer.on('copy-selection-with-context', handler);
+    return () => ipcRenderer.removeListener('copy-selection-with-context', handler);
+  },
+
   onThemeChanged: (callback) => {
     const handler = (_, theme) => callback(theme);
     ipcRenderer.on('app:theme-changed', handler);

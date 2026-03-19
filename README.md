@@ -74,6 +74,22 @@ Signed and notarized with Apple — no Gatekeeper warnings. macOS 12+ required. 
 | **File Associations** | Registers for `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn`, `.mdwn`, `.mdx`, `.txt`. Shows in Finder's "Open With". |
 | **Auto-Updates** | Checks every 4 hours. Background download. One-click "Restart & Install" with release notes. |
 
+## Built for AI-Assisted Development
+
+If you work with AI coding tools — Claude Code, Copilot, Cursor, or anything that writes to files on your behalf — this editor was designed with that workflow in mind. Most markdown editors assume a single author. This one assumes two.
+
+**Three-way merge.** When you're editing a file and an external tool writes to it at the same time, Simple Markdown Editor compares both sets of changes against the last known version. If you edited different parts of the file, both changes merge automatically — no dialog, no interruption. If you collide on the same lines, an interactive diff view lets you accept or reject each change individually.
+
+**Change notifications.** When an external merge succeeds silently, a toast notification tells you what happened — so you always know when your file was touched by something outside the editor.
+
+**Git gutter markers.** Green, blue, and red indicators in the editor gutter show added, modified, and deleted lines compared to the last git commit. After an external tool edits your file, you see exactly which lines changed at a glance.
+
+**Copy with context.** One-click copy of file contents with the file path and line numbers prepended — designed for pasting into AI chat windows. Select text and hit ⌘⌥C to get `// /path/to/file.md:L14-L27` followed by your selection. No selection copies the full file with path. Also available via right-click context menu, toolbar button, and Edit menu.
+
+**Auto-save.** Keep your files continuously saved so external tools always read your latest version. Configurable delay (1–10 seconds), toggle on/off in Settings.
+
+**File deletion detection.** If an external tool deletes a file you have open, you're prompted to close the tab or re-save the file to disk.
+
 ## What It Doesn't Do
 
 No cloud sync. No collaboration. No plugin system. No Vim mode. No WYSIWYG. No proprietary format. No account creation. No subscription. No telemetry.
