@@ -4,6 +4,8 @@ A dead simple markdown editor for macOS. Fast, focused, and free of bloat.
 
 I live in markdown daily. Every editor I tried was either too expensive, too slow, too feature-rich, or too buggy. So I built the one I actually wanted to use — three panes, no cloud, no account, no subscription. Just a clean editor, a live preview, and a file browser that stays out of your way.
 
+I also work with AI coding tools constantly — Claude, Copilot, Cursor — and needed an editor that could handle two authors on the same file without losing anyone's work. Simple Markdown Editor has three-way merge built in: if you and an external tool edit different parts of the same file, the changes combine seamlessly. If you collide on the same lines, an interactive diff view lets you pick which changes to keep, hunk by hunk. It's the only markdown editor I know of that treats concurrent editing as a first-class workflow.
+
 [![Download](https://img.shields.io/badge/download-latest-blue)](https://github.com/avanrossum/a-simple-markdown-editor/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Website](https://img.shields.io/badge/website-mipyip.com-blue)](https://mipyip.com/products/simple-markdown-editor)
