@@ -1,10 +1,10 @@
 # Simple Markdown Editor
 
-A dead simple markdown editor for macOS. Fast, focused, and free of bloat.
+A markdown editor for macOS, built for working alongside AI.
 
-I live in markdown daily. Every editor I tried was either too expensive, too slow, too feature-rich, or too buggy. So I built the one I actually wanted to use — three panes, no cloud, no account, no subscription. Just a clean editor, a live preview, and a file browser that stays out of your way.
+I built this because I was frustrated with every other markdown editor — too expensive, too slow, too bloated, or too buggy. I just wanted three panes, no cloud, no account, no subscription. A clean editor, a live preview, and a file browser that stays out of your way.
 
-I also work with AI coding tools constantly — Claude, Copilot, Cursor — and needed an editor that could handle two authors on the same file without losing anyone's work. Simple Markdown Editor has three-way merge built in: if you and an external tool edit different parts of the same file, the changes combine seamlessly. If you collide on the same lines, an interactive diff view lets you pick which changes to keep, hunk by hunk. It's the only markdown editor I know of that treats concurrent editing as a first-class workflow.
+Then it became something more. I work with AI coding tools daily — Claude Code, Copilot, Cursor — and they all write to files on my behalf. Every other editor treats that as an error condition. This one treats it as the primary workflow. When an AI tool edits your file while you're working in it, Simple Markdown Editor merges both sets of changes automatically. When they collide, you pick which lines to keep. No lost work, no surprises.
 
 [![Download](https://img.shields.io/badge/download-latest-blue)](https://github.com/avanrossum/a-simple-markdown-editor/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
@@ -24,8 +24,20 @@ Signed and notarized with Apple — no Gatekeeper warnings. macOS 12+ required. 
 <tr>
 <td width="50%">
 <strong>Three-pane layout</strong><br>
-<sub>File browser, editor, live preview with bidirectional scroll sync</sub><br><br>
-<img src="screenshot.png" alt="Three-pane layout" width="100%">
+<sub>File browser, editor with git gutter markers, and live preview</sub><br><br>
+<img src="screenshot-gutter.png" alt="Three-pane layout with git gutter" width="100%">
+</td>
+<td width="50%">
+<strong>Three-way merge + toast</strong><br>
+<sub>External changes merged automatically with notification</sub><br><br>
+<img src="screenshot-toast.png" alt="Merge toast notification" width="100%">
+</td>
+</tr>
+<tr>
+<td width="50%">
+<strong>Interactive diff view</strong><br>
+<sub>Per-hunk accept/reject when both authors edit the same lines</sub><br><br>
+<img src="screenshot-diff-merge.png" alt="Interactive diff merge" width="100%">
 </td>
 <td width="50%">
 <strong>Focus mode</strong><br>
@@ -35,9 +47,9 @@ Signed and notarized with Apple — no Gatekeeper warnings. macOS 12+ required. 
 </tr>
 <tr>
 <td width="50%">
-<strong>Interactive diff view</strong><br>
-<sub>Per-hunk accept/reject when resolving conflicts with external changes</sub><br><br>
-<img src="screenshot-diff2.png" alt="Interactive diff view" width="100%">
+<strong>Settings</strong><br>
+<sub>Theme, accent color, fonts, font size, auto-save, line numbers</sub><br><br>
+<img src="screenshot-settings.png" alt="Settings panel" width="100%">
 </td>
 <td width="50%">
 <strong>File deletion detection</strong><br>
@@ -45,40 +57,15 @@ Signed and notarized with Apple — no Gatekeeper warnings. macOS 12+ required. 
 <img src="screenshot-resave.png" alt="File deleted dialog" width="100%">
 </td>
 </tr>
-<tr>
-<td width="50%">
-<strong>Settings</strong><br>
-<sub>Theme, accent color, fonts, font size, auto-save, line numbers</sub><br><br>
-<img src="screenshot-settings.png" alt="Settings panel" width="100%">
-</td>
-<td width="50%">
-</td>
-</tr>
 </table>
-
-## Features
-
-| | |
-|---|---|
-| **Editor** | CodeMirror 6 with markdown syntax highlighting, formatting toolbar with smart toggle detection, heading cycling, multi-line list handling, and full keyboard shortcuts (⌘B, ⌘I, ⌘K, etc.). Search and replace with case sensitivity and match navigation. Per-tab undo history. |
-| **Live Preview** | GitHub Flavored Markdown in real time. Bidirectional scroll sync. Local and remote images inline. Clickable links — `.md` files open in a new tab, external links open in your browser. |
-| **Focus Mode** | Distraction-free fullscreen editing. Just the toolbar and editor, centered at a comfortable column width. Auto-saves in the background. ESC or ⌘W to return. Via right-click tab menu or ⌘⇧F. |
-| **File Browser** | Expandable directory tree with auto-refresh. Context menu: new file, new folder, rename, delete (trash), show in Finder, copy path, favorites, find in folder. |
-| **Favorites** | Pin files and folders for quick access. Drag-and-drop reordering. Stale path detection for unmounted drives. |
-| **Tabs** | Dirty indicators, per-tab scroll/cursor restore, context menu (show in Finder, copy path, close, close others, close to right, focus mode). Auto-scrolls to keep active tab visible. |
-| **Auto-Save** | Optional, with configurable delay (1–10s). Toggle in Settings. Useful when collaborating with external tools. |
-| **Export** | File > Export As > PDF or HTML. Clean light-theme styling with inline CSS, no dependencies. |
-| **Session Restore** | Tabs, active tab, folder, and window bounds persist across restarts. Multi-window support (⌘⇧N). |
-| **External Changes** | Three-way merge when you and an external tool edit different parts of the same file — changes combine seamlessly. Same-line conflicts show an interactive per-hunk diff view with click-to-toggle accept/reject. Detects externally deleted files with close or re-save prompt. |
-| **Customization** | Dark, light, or system themes. 7 accent colors. Editor font (SF Mono, Menlo, Monaco, Courier New, Andale Mono), preview font (Helvetica Neue, Georgia, Palatino, Avenir Next, Charter), font size, line numbers, resizable panes. |
-| **File Associations** | Registers for `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn`, `.mdwn`, `.mdx`, `.txt`. Shows in Finder's "Open With". |
-| **Auto-Updates** | Checks every 4 hours. Background download. One-click "Restart & Install" with release notes. |
 
 ## Built for AI-Assisted Development
 
-If you work with AI coding tools — Claude Code, Copilot, Cursor, or anything that writes to files on your behalf — this editor was designed with that workflow in mind. Most markdown editors assume a single author. This one assumes two.
+Most markdown editors assume a single author. This one assumes two.
 
-**Three-way merge.** When you're editing a file and an external tool writes to it at the same time, Simple Markdown Editor compares both sets of changes against the last known version. If you edited different parts of the file, both changes merge automatically — no dialog, no interruption. If you collide on the same lines, an interactive diff view lets you accept or reject each change individually.
+If you work with AI coding tools — Claude Code, Copilot, Cursor, or anything that writes to files on your behalf — these features exist because of that workflow:
+
+**Three-way merge.** When you're editing a file and an external tool writes to it at the same time, the editor compares both sets of changes against the last known version. If you edited different parts of the file, both changes merge automatically — no dialog, no interruption. If you collide on the same lines, an interactive diff view lets you accept or reject each change individually, hunk by hunk.
 
 **Change notifications.** When an external merge succeeds silently, a toast notification tells you what happened — so you always know when your file was touched by something outside the editor.
 
@@ -86,9 +73,26 @@ If you work with AI coding tools — Claude Code, Copilot, Cursor, or anything t
 
 **Copy with context.** One-click copy of file contents with the file path and line numbers prepended — designed for pasting into AI chat windows. Select text and hit ⌘⌥C to get `// /path/to/file.md:L14-L27` followed by your selection. No selection copies the full file with path. Also available via right-click context menu, toolbar button, and Edit menu.
 
-**Auto-save.** Keep your files continuously saved so external tools always read your latest version. Configurable delay (1–10 seconds), toggle on/off in Settings.
+**Auto-save.** Keep your files continuously saved so external tools always read your latest version. Configurable delay (1-10 seconds), toggle on/off in Settings.
 
 **File deletion detection.** If an external tool deletes a file you have open, you're prompted to close the tab or re-save the file to disk.
+
+## Features
+
+| | |
+|---|---|
+| **Editor** | CodeMirror 6 with markdown syntax highlighting, formatting toolbar with smart toggle detection, heading cycling, multi-line list handling, and full keyboard shortcuts (⌘B, ⌘I, ⌘K, etc.). Search and replace with case sensitivity and match navigation. Per-tab undo history. Git gutter markers for change tracking. |
+| **Live Preview** | GitHub Flavored Markdown in real time. Bidirectional scroll sync. Local and remote images inline. Task list checkboxes. Clickable links — `.md` files open in a new tab, external links open in your browser. |
+| **Focus Mode** | Distraction-free fullscreen editing. Just the toolbar and editor, centered at a comfortable column width. Auto-saves in the background. ESC or ⌘W to return. Via right-click tab menu or ⌘⇧F. |
+| **File Browser** | Expandable directory tree with auto-refresh. Context menu: new file, new folder, rename, delete (trash), show in Finder, copy path, favorites, find in folder. |
+| **Favorites** | Pin files and folders for quick access. Drag-and-drop reordering. Stale path detection for unmounted drives. |
+| **Tabs** | Dirty indicators, per-tab scroll/cursor restore, context menu (show in Finder, copy path, close, close others, close to right, focus mode). Auto-scrolls to keep active tab visible. |
+| **Auto-Save** | Optional, with configurable delay (1-10s). Toggle in Settings. Keeps files synced for external tool collaboration. |
+| **Export** | File > Export As > PDF or HTML. Clean light-theme styling with inline CSS, no dependencies. |
+| **Session Restore** | Tabs, active tab, folder, and window bounds persist across restarts. Multi-window support (⌘⇧N). Flush-on-quit ensures no session loss during updates. |
+| **Customization** | Dark, light, or system themes. 7 accent colors. Editor font (SF Mono, Menlo, Monaco, Courier New, Andale Mono), preview font (Helvetica Neue, Georgia, Palatino, Avenir Next, Charter), font size, line numbers, resizable panes. |
+| **File Associations** | Registers for `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn`, `.mdwn`, `.mdx`, `.txt`. Shows in Finder's "Open With". |
+| **Auto-Updates** | Checks every 4 hours. Background download. One-click "Restart & Install" with release notes. |
 
 ## What It Doesn't Do
 
@@ -141,7 +145,7 @@ Release builds require Apple Developer ID credentials (APPLE_ID, APPLE_APP_SPECI
 | Build | Vite 6 + electron-builder |
 | Security | DOMPurify, sandbox, CSP |
 | File Watching | chokidar |
-| Diffing | diff (external change resolution) |
+| Diffing | diff (three-way merge, git gutter) |
 | Updates | electron-updater (GitHub Releases) |
 | Language | JavaScript (TypeScript migration planned) |
 
