@@ -627,6 +627,10 @@ export default function App() {
               : t
           )
         );
+        // Refresh git gutter after silent update
+        if (tab.id === activeTabIdRef.current) {
+          requestAnimationFrame(() => fetchGitBaseline(tab.id, filePath));
+        }
       } else {
         // Three-way merge: try to combine user's edits with external changes
         // savedContent = common ancestor, tab.content = user's version, externalContent = external version
@@ -648,6 +652,10 @@ export default function App() {
             type: 'success',
             duration: 4000,
           });
+          // Refresh git gutter after merge
+          if (tab.id === activeTabIdRef.current) {
+            requestAnimationFrame(() => fetchGitBaseline(tab.id, filePath));
+          }
         } else {
           // Conflicting edits on the same lines — show diff dialog
           setDiffData({
