@@ -463,6 +463,8 @@ export default function FileBrowser({ folderPath, onOpenFile, onSetFolder, onOpe
 
   // ── Context Menu Actions ──
 
+  const newFilePathRef = useRef(null);
+
   const createNewFile = useCallback(async (dirPath) => {
     let name = 'Untitled.md';
     let counter = 1;
@@ -472,6 +474,7 @@ export default function FileBrowser({ folderPath, onOpenFile, onSetFolder, onOpe
     }
     const filePath = dirPath + '/' + name;
     await electronAPI.createFile(filePath, '');
+    newFilePathRef.current = filePath;
     // Force refresh so the new entry appears, then activate inline rename
     await loadDirectory(folderPath);
     setRefreshKey((k) => k + 1);
@@ -494,6 +497,15 @@ export default function FileBrowser({ folderPath, onOpenFile, onSetFolder, onOpe
   }, [folderPath, loadDirectory]);
 
   const trashFile = useCallback(async (filePath) => {
+    const name = filePath.split('/').pop();
+    const confirmed = await electronAPI.showConfirmDialog({
+      message: `Move "${name}" to Trash?`,
+      detail: 'You can restore it from the Trash later.',
+      buttons: ['Move to Trash', 'Cancel'],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (confirmed !== 0) return;
     const result = await electronAPI.trashFile(filePath);
     if (result.success) {
       loadDirectory(folderPath);
@@ -522,16 +534,19 @@ export default function FileBrowser({ folderPath, onOpenFile, onSetFolder, onOpe
   const handleContextMenu = useCallback((e, entry) => {
     const items = [];
 
+    const dirPath = entry.isDirectory ? entry.path : entry.path.substring(0, entry.path.lastIndexOf('/'));
+
+    items.push({
+      label: 'New Markdown File',
+      action: () => createNewFile(dirPath),
+    });
+    items.push({
+      label: 'New Folder',
+      action: () => createNewFolder(dirPath),
+    });
+    items.push({ separator: true });
+
     if (entry.isDirectory) {
-      items.push({
-        label: 'New Markdown File',
-        action: () => createNewFile(entry.path),
-      });
-      items.push({
-        label: 'New Folder',
-        action: () => createNewFolder(entry.path),
-      });
-      items.push({ separator: true });
       items.push({
         label: 'Find in Folder',
         action: () => onFindInFolder?.(entry.path),
@@ -543,13 +558,10 @@ export default function FileBrowser({ folderPath, onOpenFile, onSetFolder, onOpe
       label: 'Rename',
       action: () => setRenamingPath(entry.path),
     });
-
-    if (!entry.isDirectory) {
-      items.push({
-        label: 'Move to Trash',
-        action: () => trashFile(entry.path),
-      });
-    }
+    items.push({
+      label: 'Move to Trash',
+      action: () => trashFile(entry.path),
+    });
 
     items.push({ separator: true });
     items.push({
@@ -606,11 +618,15 @@ export default function FileBrowser({ folderPath, onOpenFile, onSetFolder, onOpe
       // Force refresh so the tree reflects the new name
       loadDirectory(folderPath);
       setRefreshKey((k) => k + 1);
-      if (onFileRenamed) {
+      // Auto-open if this was a newly created file
+      if (newFilePathRef.current === oldPath) {
+        newFilePathRef.current = null;
+        onOpenFile(newPath);
+      } else if (onFileRenamed) {
         onFileRenamed(oldPath, newPath);
       }
     }
-  }, [onFileRenamed, folderPath, loadDirectory]);
+  }, [onFileRenamed, onOpenFile, folderPath, loadDirectory]);
 
   const displayPath = folderPath ? truncatePath(folderPath, homeDir) : '';
 

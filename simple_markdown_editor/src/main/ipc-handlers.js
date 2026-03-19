@@ -212,6 +212,19 @@ function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
     return { success: true };
   });
 
+  ipcMain.handle('dialog:confirm', async (event, options) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const result = await dialog.showMessageBox(win, {
+      type: 'question',
+      message: options.message || 'Are you sure?',
+      detail: options.detail || '',
+      buttons: options.buttons || ['OK', 'Cancel'],
+      defaultId: options.defaultId ?? 0,
+      cancelId: options.cancelId ?? 1,
+    });
+    return result.response;
+  });
+
   // ── Search in Folder ──
 
   const SEARCH_EXTENSIONS = new Set(['.md', '.markdown', '.mdown', '.mkd', '.mkdn', '.mdwn', '.mdx', '.txt']);

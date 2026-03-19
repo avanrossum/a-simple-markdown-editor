@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-03-19
+
+### Added
+
+- New Markdown File and New Folder in right-click context menu for files (creates in parent directory)
+- Move to Trash confirmation dialog for both files and folders
+- New files auto-open in editor after rename
+- Folder trash closes all open tabs under that folder with toast notification ("Closed N tabs")
+- Confirm dialog IPC handler (reusable `dialog:confirm` bridge)
+
 ## [1.0.1] - 2026-03-19
 
 ### Added

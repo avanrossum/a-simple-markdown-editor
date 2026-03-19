@@ -558,22 +558,32 @@ export default function App() {
 
   // ── File Deleted Handler ──
 
-  const handleFileDeleted = useCallback((filePath) => {
-    electronAPI.unwatchFile(filePath);
+  const handleFileDeleted = useCallback((deletedPath) => {
+    // Support both single file and folder deletion (close all tabs under the path)
+    const isAffected = (tabPath) => tabPath === deletedPath || tabPath?.startsWith(deletedPath + '/');
+
     setTabs((prev) => {
-      const next = prev.filter((t) => t.filePath !== filePath);
+      const affected = prev.filter((t) => isAffected(t.filePath));
+      affected.forEach((t) => { if (t.filePath) electronAPI.unwatchFile(t.filePath); });
+
+      const next = prev.filter((t) => !isAffected(t.filePath));
       if (next.length === 0) {
         const fresh = createTab();
         setActiveTabId(fresh.id);
         return [fresh];
       }
-      // If active tab was the deleted file, switch to adjacent
+      // If active tab was affected, switch to adjacent
       const wasActive = prev.find((t) => t.id === activeTabId);
-      if (wasActive?.filePath === filePath) {
-        const idx = prev.findIndex((t) => t.filePath === filePath);
+      if (isAffected(wasActive?.filePath)) {
+        const idx = prev.findIndex((t) => t.id === wasActive.id);
         const newIdx = Math.min(idx, next.length - 1);
         setActiveTabId(next[newIdx].id);
       }
+
+      if (affected.length > 1) {
+        addToast(`Closed ${affected.length} tabs (folder trashed)`);
+      }
+
       return next;
     });
   }, [activeTabId]);
