@@ -1,10 +1,10 @@
 # SideMark
 
-A markdown editor for macOS, built for working alongside AI.
+**A markdown editor for macOS built for working alongside AI.**
 
-I built this because I was frustrated with every other markdown editor — too expensive, too slow, too bloated, or too buggy. I just wanted three panes, no cloud, no account, no subscription. A clean editor, a live preview, and a file browser that stays out of your way.
+Most markdown editors assume one author. SideMark assumes two. When Claude Code, Cursor, Windsurf, or any AI agent edits your files while you're working in them, SideMark handles the merge automatically. Non-overlapping changes merge silently. Conflicting changes show an interactive per-hunk diff. No lost work, no broken flow.
 
-Then it became something more. I work with AI coding tools daily — Claude Code, Copilot, Cursor — and they all write to files on my behalf. Every other editor treats that as an error condition. SideMark treats it as the primary workflow. When an AI tool edits your file while you're working in it, SideMark merges both sets of changes automatically. When they collide, you pick which lines to keep. No lost work, no surprises.
+Free and open source. No account, no subscription, no telemetry.
 
 [![Download](https://img.shields.io/badge/download-latest-blue)](https://github.com/avanrossum/sidemark/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
@@ -191,7 +191,7 @@ The application source lives in `simple_markdown_editor/`. The outer repository 
 
 ## Contributing
 
-This is a personal project built for my own use, but contributions are welcome. Open an issue first if you're planning something big.
+SideMark is free and open source under the MIT license. Contributions are welcome — open an issue first if you're planning something big.
 
 ## License
 
