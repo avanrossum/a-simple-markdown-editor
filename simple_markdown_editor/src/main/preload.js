@@ -171,6 +171,11 @@ const electronAPI = {
     ipcRenderer.on('find-in-folder', handler);
     return () => ipcRenderer.removeListener('find-in-folder', handler);
   },
+  onTextTransform: (callback) => {
+    const handler = (_, transformType) => callback(transformType);
+    ipcRenderer.on('text-transform', handler);
+    return () => ipcRenderer.removeListener('text-transform', handler);
+  },
 
   onThemeChanged: (callback) => {
     const handler = (_, theme) => callback(theme);

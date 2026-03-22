@@ -852,6 +852,9 @@ export default function App() {
       electronAPI.onFindInFolder(() => {
         if (folderPath) setFindInFolderPath(folderPath);
       }),
+      electronAPI.onTextTransform((transformType) => {
+        if (editorRef.current) editorRef.current.applyFormatting(transformType);
+      }),
     ];
     return () => unsubs.forEach((fn) => fn());
   }, [saveTab, saveTabAs, newFile, openFile, duplicateFile, exportAs, closeTab, closeWindow, activeTabId, copyFileContent, copySelectionWithContext, folderPath]);

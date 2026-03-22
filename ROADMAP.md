@@ -272,4 +272,14 @@
 
 ---
 
+## v1.0.4 — Text Transforms & Editor Polish
+
+> Status: **Complete**
+
+- [x] Text Transforms submenu (Edit > Text Transforms): Unicode Italic, Bold, Bold Italic, Small Caps, Monospace, Strikethrough, Upside Down, UPPERCASE, lowercase, Title Case
+- [x] Keyboard shortcuts for Unicode Italic (⌘⌥I) and Unicode Bold (⌘⌥B)
+- [x] Scroll past end in editor (no more jarring jumps when editing at the bottom)
+
+---
+
 See [Issues](https://github.com/avanrossum/sidemark/issues) for what's next.

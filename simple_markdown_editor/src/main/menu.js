@@ -187,6 +187,86 @@ function buildMenu({ getFocusedWindow, store, onOpen, onSave, onSaveAs, onNewFil
         },
         { type: 'separator' },
         {
+          label: 'Text Transforms',
+          submenu: [
+            {
+              label: 'Unicode Italic',
+              accelerator: 'CmdOrCtrl+Alt+I',
+              click: () => {
+                const win = getFocusedWindow();
+                if (win) win.webContents.send('text-transform', 'unicodeItalic');
+              },
+            },
+            {
+              label: 'Unicode Bold',
+              accelerator: 'CmdOrCtrl+Alt+B',
+              click: () => {
+                const win = getFocusedWindow();
+                if (win) win.webContents.send('text-transform', 'unicodeBold');
+              },
+            },
+            {
+              label: 'Unicode Bold Italic',
+              click: () => {
+                const win = getFocusedWindow();
+                if (win) win.webContents.send('text-transform', 'unicodeBoldItalic');
+              },
+            },
+            { type: 'separator' },
+            {
+              label: 'Small Caps',
+              click: () => {
+                const win = getFocusedWindow();
+                if (win) win.webContents.send('text-transform', 'smallCaps');
+              },
+            },
+            {
+              label: 'Unicode Monospace',
+              click: () => {
+                const win = getFocusedWindow();
+                if (win) win.webContents.send('text-transform', 'unicodeMonospace');
+              },
+            },
+            {
+              label: 'Strikethrough (Unicode)',
+              click: () => {
+                const win = getFocusedWindow();
+                if (win) win.webContents.send('text-transform', 'strikethroughText');
+              },
+            },
+            {
+              label: 'Upside Down',
+              click: () => {
+                const win = getFocusedWindow();
+                if (win) win.webContents.send('text-transform', 'upsideDown');
+              },
+            },
+            { type: 'separator' },
+            {
+              label: 'UPPERCASE',
+              click: () => {
+                const win = getFocusedWindow();
+                if (win) win.webContents.send('text-transform', 'uppercase');
+              },
+            },
+            {
+              label: 'lowercase',
+              click: () => {
+                const win = getFocusedWindow();
+                if (win) win.webContents.send('text-transform', 'lowercase');
+              },
+            },
+            {
+              label: 'Title Case',
+              click: () => {
+                const win = getFocusedWindow();
+                if (win) win.webContents.send('text-transform', 'titleCase');
+              },
+            },
+          ],
+        },
+        { type: 'separator' },
+        {
           label: 'Find in Folder...',
           accelerator: 'CmdOrCtrl+Shift+G',
           click: () => {

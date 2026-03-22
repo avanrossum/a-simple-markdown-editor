@@ -81,7 +81,7 @@ If you work with AI coding tools — Claude Code, Copilot, Cursor, or anything t
 
 | | |
 |---|---|
-| **Editor** | CodeMirror 6 with markdown syntax highlighting, formatting toolbar with smart toggle detection, heading cycling, multi-line list handling, and full keyboard shortcuts (⌘B, ⌘I, ⌘K, etc.). Search and replace with case sensitivity and match navigation. Per-tab undo history. Git gutter markers for change tracking. |
+| **Editor** | CodeMirror 6 with markdown syntax highlighting, formatting toolbar with smart toggle detection, heading cycling, multi-line list handling, and full keyboard shortcuts (⌘B, ⌘I, ⌘K, etc.). Search and replace with case sensitivity and match navigation. Per-tab undo history. Git gutter markers for change tracking. Text Transforms (Edit menu) for Unicode italic, bold, small caps, and more — useful for LinkedIn and other platforms that don't support markdown. |
 | **Live Preview** | GitHub Flavored Markdown in real time. Bidirectional scroll sync. Local and remote images inline. Task list checkboxes. Clickable links — `.md` files open in a new tab, external links open in your browser. |
 | **Focus Mode** | Distraction-free fullscreen editing. Just the toolbar and editor, centered at a comfortable column width. Auto-saves in the background. ESC or ⌘W to return. Via right-click tab menu or ⌘⇧F. |
 | **File Browser** | Expandable directory tree with auto-refresh. Context menu: new file, new folder, rename, delete (trash), show in Finder, copy path, favorites, find in folder. |

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
-import { EditorView, keymap, lineNumbers, highlightActiveLine, drawSelection } from '@codemirror/view';
+import { EditorView, keymap, lineNumbers, highlightActiveLine, drawSelection, scrollPastEnd } from '@codemirror/view';
 import { EditorState, Transaction, RangeSet } from '@codemirror/state';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
@@ -8,6 +8,7 @@ import { search, searchKeymap } from '@codemirror/search';
 import { syntaxHighlighting, defaultHighlightStyle, HighlightStyle } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import { gitGutterExtension, setGitMarkers, computeGitMarkers } from '../gitGutter';
+import { TEXT_TRANSFORMS } from '../textTransforms';
 
 // ── Editor Theme Factory ──
 // Built dynamically so CodeMirror re-measures font metrics when settings change
@@ -183,6 +184,7 @@ const Editor = forwardRef(function Editor({ content, onChange, settings, theme, 
       search({ top: true }),
       updateListener,
       EditorView.lineWrapping,
+      scrollPastEnd(),
       buildEditorTheme(theme === 'dark', settings?.fontSize, settings?.fontFamily),
     ];
 
@@ -273,6 +275,21 @@ const Editor = forwardRef(function Editor({ content, onChange, settings, theme, 
     function applyFormatting(action) {
       const view = viewRef.current;
       if (!view) return;
+
+      // ── Text Transforms (unicode italic, bold, etc.) ──
+      const transform = TEXT_TRANSFORMS[action];
+      if (transform) {
+        const { from, to } = view.state.selection.main;
+        if (from === to) { view.focus(); return; } // Need a selection
+        const selected = view.state.sliceDoc(from, to);
+        const result = transform.fn(selected);
+        view.dispatch({
+          changes: { from, to, insert: result },
+          selection: { anchor: from, head: from + result.length },
+        });
+        view.focus();
+        return;
+      }
 
       const fmt = FORMATTING[action];
       if (!fmt) return;

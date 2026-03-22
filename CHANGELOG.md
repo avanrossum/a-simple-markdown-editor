@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-03-21
+
+### Added
+
+- Text Transforms submenu (Edit > Text Transforms): Unicode Italic, Unicode Bold, Unicode Bold Italic, Small Caps, Unicode Monospace, Strikethrough (combining characters), Upside Down, UPPERCASE, lowercase, Title Case — for platforms like LinkedIn that don't support markdown formatting
+- Keyboard shortcuts for Unicode Italic (⌘⌥I) and Unicode Bold (⌘⌥B)
+- Scroll past end in editor — cursor no longer jumps to the bottom edge when editing near the end of a document
+
 ## [1.0.3] - 2026-03-19
 
 ### Added
