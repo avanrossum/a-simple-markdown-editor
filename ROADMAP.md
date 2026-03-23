@@ -282,4 +282,15 @@
 
 ---
 
+## v1.0.5 — Tab Reorder & Session Fix
+
+> Status: **Complete**
+
+- [x] Tab drag-and-drop reordering
+- [x] Window drag spacer in title bar (60px, always draggable even with many tabs)
+- [x] Session persistence fix: remove renderer debounce, simplify update-restart quit path
+- [x] Beta release channel (`npm run release:beta`, prerelease versions, `allowPrerelease` auto-detection)
+
+---
+
 See [Issues](https://github.com/avanrossum/sidemark/issues) for what's next.

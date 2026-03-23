@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-03-22
+
+### Added
+
+- Tab drag-and-drop reordering
+- Window drag spacer in title bar (always draggable even when tabs overflow)
+- Beta release channel for testing auto-updates before shipping to stable users
+
+### Fixed
+
+- Session persistence on auto-update restart — open tabs and folder are now reliably restored after "Restart & Install"
+- Editor scroll jumping when editing near the bottom of a document (scrollPastEnd)
+
 ## [1.0.4] - 2026-03-21
 
 ### Added
