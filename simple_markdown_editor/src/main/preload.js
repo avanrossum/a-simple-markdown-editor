@@ -176,6 +176,12 @@ const electronAPI = {
     ipcRenderer.on('text-transform', handler);
     return () => ipcRenderer.removeListener('text-transform', handler);
   },
+  onFlushSession: (callback) => {
+    const handler = () => callback();
+    ipcRenderer.on('flush-session', handler);
+    return () => ipcRenderer.removeListener('flush-session', handler);
+  },
+  sessionFlushed: () => ipcRenderer.send('session-flushed'),
 
   onThemeChanged: (callback) => {
     const handler = (_, theme) => callback(theme);

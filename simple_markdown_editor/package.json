@@ -1,6 +1,6 @@
 {
   "name": "sidemark",
-  "version": "1.0.4",
+  "version": "1.0.5-beta.1",
   "description": "A markdown editor built for working alongside AI",
   "main": "src/main/main.js",
   "author": {
@@ -15,7 +15,8 @@
     "dev:electron": "wait-on tcp:5173 && electron . --dev",
     "build:renderer": "vite build",
     "build": "npm run build:renderer && electron-builder --config electron-builder.config.js",
-    "release": "bash scripts/release.sh"
+    "release": "bash scripts/release.sh",
+    "release:beta": "bash scripts/release-beta.sh"
   },
   "dependencies": {
     "chokidar": "^4.0.0",

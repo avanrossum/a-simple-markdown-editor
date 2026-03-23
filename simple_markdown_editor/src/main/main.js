@@ -331,6 +331,13 @@ function setupAutoUpdater() {
   autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = true;
 
+  // If running a prerelease version (e.g. 1.0.5-beta.1), opt into the beta channel
+  // so beta builds auto-update to the next beta. Stable builds ignore prereleases.
+  const currentVersion = app.getVersion();
+  if (currentVersion.includes('-')) {
+    autoUpdater.allowPrerelease = true;
+  }
+
   autoUpdater.on('update-available', (info) => {
     isManualUpdateCheck = false;
     showUpdateDialog('update-available', {
@@ -413,7 +420,37 @@ function setupAutoUpdater() {
     });
   });
 
-  ipcMain.handle('app:restart-for-update', () => {
+  ipcMain.handle('app:restart-for-update', async () => {
+    // Collect latest session data from all windows before quitting
+    const allWindows = [...windows];
+    if (allWindows.length > 0) {
+      await new Promise((resolve) => {
+        let remaining = allWindows.filter((w) => !w.isDestroyed()).length;
+        if (remaining === 0) { resolve(); return; }
+
+        const onFlushed = () => {
+          remaining--;
+          if (remaining <= 0) {
+            ipcMain.removeListener('session-flushed', onFlushed);
+            resolve();
+          }
+        };
+        ipcMain.on('session-flushed', onFlushed);
+
+        for (const win of allWindows) {
+          if (!win.isDestroyed()) {
+            win.webContents.send('flush-session');
+          }
+        }
+
+        // Safety timeout — don't block update forever
+        setTimeout(() => {
+          ipcMain.removeListener('session-flushed', onFlushed);
+          resolve();
+        }, 2000);
+      });
+    }
+
     store.flush();
     autoUpdater.quitAndInstall(false, true);
   });
@@ -570,6 +607,8 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+  // Flush after all beforeunload handlers have saved their session data
+  if (isQuitting) store.flush();
   if (process.platform !== 'darwin' || isQuitting) {
     app.quit();
   }

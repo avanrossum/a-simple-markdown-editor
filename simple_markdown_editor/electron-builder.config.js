@@ -38,6 +38,5 @@ module.exports = {
     provider: 'github',
     owner: 'avanrossum',
     repo: 'sidemark',
-    releaseType: 'release',
   },
 };

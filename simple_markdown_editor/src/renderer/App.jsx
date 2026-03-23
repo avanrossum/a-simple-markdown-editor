@@ -243,6 +243,14 @@ export default function App() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [saveSessionNow]);
 
+  // Flush session on demand from main process (e.g. before update restart)
+  useEffect(() => {
+    return electronAPI.onFlushSession(() => {
+      saveSessionNow();
+      electronAPI.sessionFlushed();
+    });
+  }, [saveSessionNow]);
+
   // ── Restore Tab View State ──
 
   useEffect(() => {
