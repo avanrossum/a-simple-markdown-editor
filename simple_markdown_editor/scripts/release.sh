@@ -47,9 +47,11 @@ if [ -z "$CHANGELOG_NOTES" ]; then
   CHANGELOG_NOTES="Release v${VERSION}"
 fi
 
-# Find built artifacts (quote paths for filenames with spaces)
-DMG_FILE=$(find dist -maxdepth 1 -name "*${VERSION}*.dmg" -print -quit)
-ZIP_FILE=$(find dist -maxdepth 1 -name "*${VERSION}*.zip" -print -quit)
+# Find built artifacts — use exact version to avoid matching beta variants
+DMG_FILE="dist/sidemark-${VERSION}-arm64.dmg"
+ZIP_FILE="dist/sidemark-${VERSION}-arm64.zip"
+[ ! -f "$DMG_FILE" ] && DMG_FILE=""
+[ ! -f "$ZIP_FILE" ] && ZIP_FILE=""
 YML_FILE="dist/latest-mac.yml"
 
 RELEASE_ARGS=()
