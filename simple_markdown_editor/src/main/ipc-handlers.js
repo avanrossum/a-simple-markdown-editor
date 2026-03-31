@@ -43,7 +43,7 @@ function requireValidPath(filePath) {
   }
 }
 
-function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
+function registerIpcHandlers({ store, fileWatcher, getFocusedWindow, globalShortcuts }) {
 
   // Helper: get the window that sent an IPC event
   function getWindowFromEvent(event) {
@@ -413,12 +413,19 @@ function registerIpcHandlers({ store, fileWatcher, getFocusedWindow }) {
   ipcMain.handle('settings:set', async (_, key, value) => {
     store.setSetting(key, value);
     broadcast('settings:changed', store.getSettings());
+    // Refresh global shortcuts if a hotkey-related setting changed
+    if (key === 'globalHotkeysEnabled' || key === 'globalHotkeyOpenPath') {
+      globalShortcuts.refresh();
+    }
     return { success: true };
   });
 
   ipcMain.handle('settings:set-multiple', async (_, updates) => {
     store.setSettings(updates);
     broadcast('settings:changed', store.getSettings());
+    if ('globalHotkeysEnabled' in updates || 'globalHotkeyOpenPath' in updates) {
+      globalShortcuts.refresh();
+    }
     return { success: true };
   });
 

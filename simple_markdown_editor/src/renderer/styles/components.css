@@ -782,6 +782,31 @@ select:focus {
   transform: translateX(18px);
 }
 
+/* Hotkey Recorder */
+.hotkey-recorder {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  min-width: 140px;
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.hotkey-recorder:hover {
+  border-color: var(--accent);
+}
+
+.hotkey-recorder.recording {
+  border-color: var(--accent);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
 /* Segmented Control (theme switcher) */
 .segmented-control {
   display: flex;

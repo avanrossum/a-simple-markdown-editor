@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, nativeTheme, protocol, net, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, nativeTheme, protocol, net, dialog, globalShortcut } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const Store = require('./store');
@@ -6,6 +6,7 @@ const FileWatcher = require('./file-watcher');
 const { registerIpcHandlers } = require('./ipc-handlers');
 const { buildAndSetMenu } = require('./menu');
 const { THEME_BG_COLORS, WINDOW_DEFAULTS, UPDATE_DIALOG_SIZE, TIMING } = require('./constants');
+const GlobalShortcuts = require('./global-shortcuts');
 
 // ── Register custom protocol for local file access (must be before ready) ──
 protocol.registerSchemesAsPrivileged([
@@ -611,10 +612,24 @@ app.whenReady().then(() => {
     return { success: false };
   });
 
+  // ── Global Shortcuts ──
+  const globalShortcuts = new GlobalShortcuts({
+    store,
+    getFocusedWindow,
+    createWindowIfNeeded: () => {
+      if (windows.size === 0) {
+        return createWindow({ fresh: true });
+      }
+      return getFocusedWindow();
+    },
+  });
+  globalShortcuts.refresh();
+
   registerIpcHandlers({
     store,
     fileWatcher,
     getFocusedWindow,
+    globalShortcuts,
   });
 
   buildAndSetMenu({
@@ -693,6 +708,7 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   isQuitting = true;
+  globalShortcut.unregisterAll();
   fileWatcher.destroy();
   store.flush();
 });

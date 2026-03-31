@@ -304,4 +304,19 @@
 
 ---
 
+## v1.0.7 — Open from Path & Deep Linking
+
+> Status: **Complete**
+
+- [x] Open from Path modal (⌘⇧P): paste file/directory paths with `~` expansion and relative path resolution
+- [x] `file:resolve-path` IPC handler for path expansion and validation
+- [x] `sidemark://` URL protocol registration (electron-builder + `setAsDefaultProtocolClient`)
+- [x] Single-instance lock for deep link forwarding
+- [x] `open-url` (macOS) and `second-instance` (cross-platform) event handlers
+- [x] Path validation on deep links (same rules as IPC handlers)
+- [ ] `?line=N` parameter: parsed but jump-to-line not yet wired in Editor.jsx
+- [ ] Claude Code integration: `.claude/skills/open-in-sidemark.md` skill, post-tool hooks
+
+---
+
 See [Issues](https://github.com/avanrossum/sidemark/issues) for what's next.

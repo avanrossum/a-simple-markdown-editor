@@ -48,6 +48,8 @@ const DEFAULT_SETTINGS = {
   windowBounds: null,
   favorites: [],
   showFileDates: false,
+  globalHotkeysEnabled: false,
+  globalHotkeyOpenPath: 'CmdOrCtrl+Shift+Space',
 };
 
 module.exports = {

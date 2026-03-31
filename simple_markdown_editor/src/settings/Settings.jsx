@@ -1,6 +1,71 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const { electronAPI } = window;
+
+// ── Hotkey Recorder ──
+// Captures a keyboard shortcut when focused, displays it as an Electron accelerator string.
+
+const MODIFIER_KEYS = new Set(['Meta', 'Control', 'Alt', 'Shift']);
+const KEY_DISPLAY = { Meta: '\u2318', Control: 'Ctrl', Alt: '\u2325', Shift: '\u21E7' };
+
+function keyEventToAccelerator(e) {
+  const parts = [];
+  if (e.metaKey) parts.push('CmdOrCtrl');
+  else if (e.ctrlKey) parts.push('CmdOrCtrl');
+  if (e.altKey) parts.push('Alt');
+  if (e.shiftKey) parts.push('Shift');
+
+  if (MODIFIER_KEYS.has(e.key)) return null; // Modifier only — wait for a real key
+
+  let key = e.key;
+  if (key === ' ') key = 'Space';
+  else if (key.length === 1) key = key.toUpperCase();
+  else if (key === 'ArrowUp') key = 'Up';
+  else if (key === 'ArrowDown') key = 'Down';
+  else if (key === 'ArrowLeft') key = 'Left';
+  else if (key === 'ArrowRight') key = 'Right';
+
+  if (parts.length === 0) return null; // Require at least one modifier
+  parts.push(key);
+  return parts.join('+');
+}
+
+// Detect macOS via navigator (process not available in sandboxed renderer)
+const isMac = navigator.platform?.startsWith('Mac') || navigator.userAgent?.includes('Mac');
+
+function formatAccelerator(accel) {
+  if (!accel) return '';
+  return accel
+    .replace('CmdOrCtrl', isMac ? '\u2318' : 'Ctrl')
+    .replace(/\+/g, ' + ');
+}
+
+function HotkeyRecorder({ value, onChange }) {
+  const [recording, setRecording] = useState(false);
+
+  const handleKeyDown = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const accel = keyEventToAccelerator(e);
+    if (accel) {
+      onChange(accel);
+      setRecording(false);
+    }
+  }, [onChange]);
+
+  const handleBlur = useCallback(() => setRecording(false), []);
+
+  return (
+    <button
+      className={`hotkey-recorder ${recording ? 'recording' : ''}`}
+      onClick={() => setRecording(true)}
+      onKeyDown={recording ? handleKeyDown : undefined}
+      onBlur={handleBlur}
+    >
+      {recording ? 'Press shortcut...' : (formatAccelerator(value) || 'Click to set')}
+    </button>
+  );
+}
 
 const ACCENT_COLORS = ['blue', 'purple', 'pink', 'red', 'orange', 'amber', 'green'];
 
@@ -175,6 +240,36 @@ export default function Settings({ settings: initialSettings, onClose }) {
                 <option value={5000}>5 seconds</option>
                 <option value={10000}>10 seconds</option>
               </select>
+            </div>
+          )}
+        </div>
+
+        {/* ── Global Hotkeys ── */}
+        <div className="settings-section">
+          <div className="settings-section-title">Global Hotkeys</div>
+
+          <div className="settings-row">
+            <div>
+              <label>Enable system-wide hotkeys</label>
+              <div className="hint">Work even when SideMark is not focused</div>
+            </div>
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={settings.globalHotkeysEnabled || false}
+                onChange={(e) => updateSetting('globalHotkeysEnabled', e.target.checked)}
+              />
+              <span className="toggle-slider" />
+            </label>
+          </div>
+
+          {settings.globalHotkeysEnabled && (
+            <div className="settings-row">
+              <label>Open from Path</label>
+              <HotkeyRecorder
+                value={settings.globalHotkeyOpenPath || ''}
+                onChange={(accel) => updateSetting('globalHotkeyOpenPath', accel)}
+              />
             </div>
           )}
         </div>
